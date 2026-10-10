@@ -1,0 +1,84 @@
+name: Android APK
+on:
+  push:
+    branches: ['android-script-library']
+    tags: ['v*']
+    paths: ['android-library/**', '.github/workflows/android-apk.yml']
+  pull_request:
+    paths: ['android-library/**', '.github/workflows/android-apk.yml']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing tag to publish from this build
+        required: false
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Select build mode
+        id: mode
+        run: |
+          if git log -1 --format=%B | grep -Fq '[skip checks]'; then
+            echo 'skip_checks=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'skip_checks=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Test, lint and build
+        if: ${{ steps.mode.outputs.skip_checks != 'true' }}
+        working-directory: android-library
+        run: gradle --no-daemon testDebugUnitTest lintDebug assembleDebug
+      - name: Compile without tests or lint
+        if: ${{ steps.mode.outputs.skip_checks == 'true' }}
+        working-directory: android-library
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Script-Library-APK
+          path: android-library/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-reports
+          path: |
+            android-library/app/build/reports/tests
+            android-library/app/build/reports/lint-results-debug.html
+      - name: Build signed release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export RELEASE_KEYSTORE="$RUNNER_TEMP/release.jks"
+          cd android-library
+          gradle --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/Script-Library.apk"
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          notes=".github/release-notes/$RELEASE_TAG.md"
+          if test -f "$notes"; then
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP/Script-Library.apk" --verify-tag --title "$RELEASE_TAG" --notes-file "$notes"
+          else
+            gh release create "$RELEASE_TAG" "$RUNNER_TEMP/Script-Library.apk" --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi

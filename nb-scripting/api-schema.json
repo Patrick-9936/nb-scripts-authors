@@ -1,0 +1,6288 @@
+{
+  "source": "nulls-mods-community/scripting-docs",
+  "classes": {
+    "Server": {
+      "description": "Объект текущего боя. Существует в единственном экземпляре. Является точкой входа в API скриптинга.",
+      "parent": null,
+      "fields": [
+        {
+          "name": "tick",
+          "signature": "number (readonly)",
+          "description": "Текущий тик сервера. Монотонно увеличивается на 1 каждые 50 миллисекунд.",
+          "readonly": true
+        },
+        {
+          "name": "playersCount",
+          "signature": "number (readonly)",
+          "description": "Количество игроков в бою.",
+          "readonly": true
+        },
+        {
+          "name": "locationData",
+          "signature": "LocationData (readonly)",
+          "description": "LocationData текущей локации. Может быть равен nil, если используется кастомная карта.",
+          "readonly": true
+        },
+        {
+          "name": "gameMode",
+          "signature": "GameMode (readonly)",
+          "description": "Текущий игровой режим.",
+          "readonly": true
+        },
+        {
+          "name": "isBattleEnded",
+          "signature": "boolean (readonly)",
+          "description": "Завершен ли бой?",
+          "readonly": true
+        },
+        {
+          "name": "hasPoisonDisabled",
+          "signature": "boolean",
+          "description": "Выключен ли яд игрового режима?",
+          "readonly": false
+        },
+        {
+          "name": "hasIntroSkip",
+          "signature": "boolean",
+          "description": "Пропустить ли интро-анимацию?",
+          "readonly": false
+        },
+        {
+          "name": "objectManager",
+          "signature": "GameObjectManager (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "map",
+          "signature": "TileMap (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "getClientInfo",
+          "signature": "(index: number) ⇒ ClientInfo",
+          "description": "Позволяет получить объект ClientInfo по индексу игрока.",
+          "readonly": false
+        },
+        {
+          "name": "isIntroFinished",
+          "signature": "() ⇒ boolean",
+          "description": "Позволяет проверить, завершилась ли интро-анимация боя.",
+          "readonly": false
+        },
+        {
+          "name": "getRandomInt",
+          "signature": "(N: number, M: number) ⇒ number",
+          "description": "Позволяет получить случайное целое число от N до M: [N; M). Использует тот же генератор случайных чисел, что и логика игры.",
+          "readonly": false
+        },
+        {
+          "name": "debugFinishBattle",
+          "signature": "(team: number) ⇒ void",
+          "description": "Принудительно завершает бой, задавая команду-победителя.",
+          "readonly": false
+        }
+      ]
+    },
+    "GameObjectManager": {
+      "description": "Менеджер игровых объектов LogicGameObject. Хранит игровые объекты и управляет их жизненным циклом.",
+      "parent": null,
+      "fields": [],
+      "methods": [
+        {
+          "name": "getObject",
+          "signature": "(id: number) ⇒ LogicGameObject",
+          "description": "Ищет объект по Object ID.",
+          "readonly": false
+        },
+        {
+          "name": "addObject",
+          "signature": "(object: LogicGameObject) ⇒ void",
+          "description": "Добавляет новый объект на поле боя.",
+          "readonly": false
+        },
+        {
+          "name": "getCharacters",
+          "signature": "() ⇒ Iterable",
+          "description": "Возвращает список объектов класса LogicCharacter.",
+          "readonly": false
+        },
+        {
+          "name": "getAreaEffects",
+          "signature": "() ⇒ Iterable",
+          "description": "Возвращает список объектов класса LogicAreaEffect.",
+          "readonly": false
+        },
+        {
+          "name": "getItems",
+          "signature": "() ⇒ Iterable",
+          "description": "Возвращает список объектов LogicItem.",
+          "readonly": false
+        },
+        {
+          "name": "getProjectiles",
+          "signature": "() ⇒ Iterable",
+          "description": "Возвращает список объектов LogicProjectile.",
+          "readonly": false
+        }
+      ]
+    },
+    "ClientInfo": {
+      "description": "Данные конкретного игрока. Для каждого игрока этот объект создается в единственном экземпляре на весь бой. Имейте в виду, что некоторые поля (например: x, y, isAlive) обновляются только в конце игрового цикла каждый тик.",
+      "parent": null,
+      "fields": [
+        {
+          "name": "index",
+          "signature": "number (readonly)",
+          "description": "Индекс этого игрока.",
+          "readonly": true
+        },
+        {
+          "name": "team",
+          "signature": "number (readonly)",
+          "description": "Номер команды игрока. Два игрока одной команды будут иметь одинаковое значение.",
+          "readonly": true
+        },
+        {
+          "name": "objectId",
+          "signature": "number (readonly)",
+          "description": "Object ID текущего LogicCharacter, за которого играет игрок.",
+          "readonly": true
+        },
+        {
+          "name": "x",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "y",
+          "signature": "number (readonly)",
+          "description": "Позиция камеры игрока. В большинстве случаев будет совпадать с позицией LogicCharacter, за которого играет игрок.",
+          "readonly": true
+        },
+        {
+          "name": "gamePoints",
+          "signature": "number",
+          "description": "Количество игровых очков. Предназначение зависит от режима.",
+          "readonly": false
+        },
+        {
+          "name": "isAlive",
+          "signature": "boolean (readonly)",
+          "description": "Равен true, если персонаж игрока жив и присутствует на карте.",
+          "readonly": true
+        },
+        {
+          "name": "isBot",
+          "signature": "boolean (readonly)",
+          "description": "Показывает, является ли игрок ботом.",
+          "readonly": true
+        },
+        {
+          "name": "ultiCharge",
+          "signature": "number",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "maxUltiCharge",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "overchargeCharge",
+          "signature": "number",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "maxOverchargeCharge",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ultiUsesLeft",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "isRespawning",
+          "signature": "boolean (readonly)",
+          "description": "Равен true, если игрок возрождается и вот-вот заспавнится.",
+          "readonly": true
+        },
+        {
+          "name": "emoteUsedIndex",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "emoteUsedTick",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "isOverchargeActive",
+          "signature": "boolean (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "accessory",
+          "signature": "Accessory (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "getSkinData",
+          "signature": "() ⇒ SkinData",
+          "description": "Возвращает текущий SkinData для этого игрока.",
+          "readonly": false
+        },
+        {
+          "name": "getAttackTeam",
+          "signature": "() ⇒ number",
+          "description": "Возвращает эффективный номер команды игрока. Если игрок находится под контролем Виллоу, значение будет равно номеру команды этой Виллоу. В остальных случаях будет равно полю team.",
+          "readonly": false
+        }
+      ]
+    },
+    "LogicGameObject": {
+      "description": "Абстрактный класс. Игровой объект на поле боя.",
+      "parent": null,
+      "fields": [
+        {
+          "name": "id",
+          "signature": "number (readonly)",
+          "description": "Уникальный Object ID этого объекта.",
+          "readonly": true
+        },
+        {
+          "name": "data",
+          "signature": "GameObjectData (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "x",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "y",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "z",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "index",
+          "signature": "number (readonly)",
+          "description": "Индекс игрока, которому принадлежит объект. Равен -1, если объект никому не принадлежит.",
+          "readonly": true
+        },
+        {
+          "name": "team",
+          "signature": "number (readonly)",
+          "description": "Номер команды, которой принадлежит объект. Равен -1, если объект нейтрален или враждебен для всех.",
+          "readonly": true
+        },
+        {
+          "name": "dimension",
+          "signature": "number (readonly)",
+          "description": "Измерение. Равен 1, если объект находится в измерении Корделиуса, и 0 в остальных случаях.",
+          "readonly": true
+        },
+        {
+          "name": "traits",
+          "signature": "Traits (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "setPosition",
+          "signature": "(x: number, y: number, z: number) ⇒ void",
+          "description": "Задает координаты объекта. Важно: игровая логика может перезаписать ваши координаты, если объект находится в движении.",
+          "readonly": false
+        },
+        {
+          "name": "isAlive",
+          "signature": "() ⇒ boolean",
+          "description": "Возвращает false, если объект был уничтожен или убит. В ином случае вернет true.",
+          "readonly": false
+        },
+        {
+          "name": "getType",
+          "signature": "() ⇒ number",
+          "description": "Позволяет узнать тип этого объекта: 0 = LogicCharacter, 1 = LogicProjectile, 2 = LogicAreaEffect, 3 = LogicItem.",
+          "readonly": false
+        },
+        {
+          "name": "getSkinData",
+          "signature": "() ⇒ SkinData",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "isOverchargeActive",
+          "signature": "() ⇒ boolean",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "setIndex",
+          "signature": "(index: number, team: number) ⇒ void",
+          "description": "Позволяет задать игрока-владельца объекта. Рекомендуется вызывать только перед добавлением объекта в GameObjectManager.",
+          "readonly": false
+        }
+      ]
+    },
+    "Traits": {
+      "description": "Менеджер особых способностей (traits) конкретного игрового объекта. Новые объекты наследуют способности от родительских объектов.",
+      "parent": null,
+      "fields": [],
+      "methods": [
+        {
+          "name": "add",
+          "signature": "(data: TraitData) ⇒ void",
+          "description": "Добавляет конкретную способность.",
+          "readonly": false
+        },
+        {
+          "name": "remove",
+          "signature": "(data: TraitData) ⇒ boolean",
+          "description": "Удаляет конкретную способность.",
+          "readonly": false
+        },
+        {
+          "name": "getComponent",
+          "signature": "(type: TraitType) ⇒ TraitData",
+          "description": "Позволяет получить конкретную способность по её типу. Возвращает nil, если способности с таким типом у объекта нет.",
+          "readonly": false
+        }
+      ]
+    },
+    "LogicCharacter": {
+      "description": "Наследуется от LogicGameObject. Персонаж. Имеет здоровье, может двигаться по заданному пути и атаковать. Самый обширный класс объектов.",
+      "parent": "LogicGameObject",
+      "fields": [
+        {
+          "name": "angleLegs",
+          "signature": "number (readonly)",
+          "description": "Угол направления ног персонажа. По этому значению можно определить направление его движения.",
+          "readonly": true
+        },
+        {
+          "name": "angleHead",
+          "signature": "number (readonly)",
+          "description": "Угол направления головы персонажа.",
+          "readonly": true
+        },
+        {
+          "name": "hitPoints",
+          "signature": "number (readonly)",
+          "description": "Текущее количество здоровья.",
+          "readonly": true
+        },
+        {
+          "name": "maxHitPoints",
+          "signature": "number (readonly)",
+          "description": "Максимальное количество здоровья.",
+          "readonly": true
+        },
+        {
+          "name": "type",
+          "signature": "CharacterType (readonly)",
+          "description": "Тип персонажа.",
+          "readonly": true
+        },
+        {
+          "name": "isBot",
+          "signature": "boolean (readonly)",
+          "description": "Управляется ли персонаж ботом?",
+          "readonly": true
+        },
+        {
+          "name": "isStunned",
+          "signature": "boolean (readonly)",
+          "description": "Есть ли стан у персонажа?",
+          "readonly": true
+        },
+        {
+          "name": "persistentSpeedBuff",
+          "signature": "number",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "persistentReloadBuff",
+          "signature": "number",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "heroUpgradeLevel",
+          "signature": "number",
+          "description": "Уровень улучшения персонажа. Считается с нуля. Не все игровые механики используют это поле, поэтому вам также может понадобиться вызвать setUpgradeLevel() у конкретного Skill.",
+          "readonly": false
+        },
+        {
+          "name": "gamePoints",
+          "signature": "number",
+          "description": "Количество игровых очков текущего персонажа. Предназначение зависит от режима и может отличаться от одноименного поля в ClientInfo.",
+          "readonly": false
+        },
+        {
+          "name": "powerPoints",
+          "signature": "number",
+          "description": "Количество очков усиления из ШД. Используется для отображения на клиенте и при выпадании предметов при смерти. Не влияет на урон или ХП персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "linkedCharacter",
+          "signature": "LogicCharacter (readonly)",
+          "description": "Мяч (carryable), который держит персонаж. Если персонаж ничего не держит, то будет равен nil.",
+          "readonly": true
+        },
+        {
+          "name": "lastDamageSourceIndex",
+          "signature": "number (readonly)",
+          "description": "Индекс игрока, который в последний раз наносил урон этому персонажу.",
+          "readonly": true
+        },
+        {
+          "name": "hasRespawnShield",
+          "signature": "boolean (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "consShieldValue",
+          "signature": "number (readonly)",
+          "description": "Оставшееся здоровье consumable-щита.",
+          "readonly": true
+        },
+        {
+          "name": "takingDamageListeners",
+          "signature": "List (readonly)",
+          "description": "Список подписок на событие получения урона. Использует класс DamageEventListener.",
+          "readonly": true
+        },
+        {
+          "name": "dealingDamageListeners",
+          "signature": "List (readonly)",
+          "description": "Список подписок на событие нанесения урона. Использует класс DamageEventListener.",
+          "readonly": true
+        },
+        {
+          "name": "deathListeners",
+          "signature": "List (readonly)",
+          "description": "Список подписок на событие смерти (когда здоровье опускается до нуля). Использует класс SourceListener.",
+          "readonly": true
+        },
+        {
+          "name": "skillUseListeners",
+          "signature": "List (readonly)",
+          "description": "Список подписок на событие использования атаки или супера. Использует класс SkillEventListener.",
+          "readonly": true
+        },
+        {
+          "name": "startOverchargeListeners",
+          "signature": "List (readonly)",
+          "description": "Список подписок на событие использования гиперзаряда. Использует класс BasicListener.",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "takeDamage",
+          "signature": "(srcIndex: number, damage: number, ulti: number, attacker: LogicCharacter, projectile: LogicProjectile, hasIndication: boolean, hasHighlight: boolean, srcX: number, srcY: number, someData: Data, forceProtected: boolean, origin: AttackOrigin, forceAll: boolean, makeVisible: boolean, disallowSpawns: boolean, extraValue: number) ⇒ boolean",
+          "description": "Наносит определенный урон игроку.",
+          "readonly": false
+        },
+        {
+          "name": "takeHeal",
+          "signature": "(srcIndex: number, damage: number, hasIndication: boolean, someData: Data, origin: AttackOrigin) ⇒ boolean",
+          "description": "Лечит определенное количество здоровья игрока.",
+          "readonly": false
+        },
+        {
+          "name": "stopMovement",
+          "signature": "() ⇒ void",
+          "description": "Останавливает движение персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "moveTo",
+          "signature": "(x: number, y: number, hasCustomSpeed: boolean, customSpeed: number, isNw: boolean, useTeleports: boolean) ⇒ void",
+          "description": "Строит путь и начинает перемещение к указанной точке. Если hasCustomSpeed = false, то используется скорость персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "isPlayerControlRemoved",
+          "signature": "() ⇒ boolean",
+          "description": "Возвращает true, если игрок не может управлять своим персонажем в данный момент.",
+          "readonly": false
+        },
+        {
+          "name": "getWeaponSkill",
+          "signature": "() ⇒ Skill",
+          "description": "Возвращает скилл основной атаки персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "getUltiSkill",
+          "signature": "() ⇒ Skill",
+          "description": "Возвращает скилл супера персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "getSkill",
+          "signature": "(data: SkillData) ⇒ Skill",
+          "description": "Возвращает скилл с соответствующим SkillData, если такой присутствует у персонажа.",
+          "readonly": false
+        },
+        {
+          "name": "useSkill",
+          "signature": "(data: SkillData, x: number, y: number, isAutoAim: boolean) ⇒ boolean",
+          "description": "Использует заданный скилл, если он доступен.",
+          "readonly": false
+        },
+        {
+          "name": "increaseMaxHitPoints",
+          "signature": "(value: number, powerUps: boolean) ⇒ void",
+          "description": "Увеличивает максимальное количество здоровья у персонажа. Если второй аргумент равен true, то также увеличивает на 1 количество банок в ШД.",
+          "readonly": false
+        },
+        {
+          "name": "teleport",
+          "signature": "(x: number, y: number, srcAreaEffect: AreaEffectData, destAreaEffect: AreaEffectData, damage: number, ultiCharge: number) ⇒ void",
+          "description": "Телепортирует персонажа в указанную точку. Можно задать эффекты, которые появятся в исходной точке и точке назначения. Эти эффекты будут использовать заданный урон.",
+          "readonly": false
+        },
+        {
+          "name": "spawnCirclingAreaEffect",
+          "signature": "(damageBonus: number, data: AreaEffectData, origin: AttackOrigin, applyOwnerBuffs: boolean, followOwner: boolean) ⇒ LogicAreaEffect",
+          "description": "Создает новый эффект от имени этого персонажа. Конкретно этот метод предполагается для таких механик, как супер Эмз, эффект зарядки ульты Базза или эффект лечения от станции Пэм. В общем, разные долгоживущие эффекты, зачастую привязанные к персонажу.",
+          "readonly": false
+        },
+        {
+          "name": "getPet",
+          "signature": "(movingOnly: boolean, standingOnly: boolean) ⇒ LogicCharacter",
+          "description": "Позволяет получить первого питомца этого персонажа, если таковой присутствует. Иначе вернет nil.",
+          "readonly": false
+        },
+        {
+          "name": "blockHealthRegen",
+          "signature": "() ⇒ void",
+          "description": "Сбрасывает таймер восстановления здоровья.",
+          "readonly": false
+        },
+        {
+          "name": "addStatusEffect",
+          "signature": "(data: StatusEffectData, srcIndex: number, srcTeam: number, origin: AttackOrigin, attacker: LogicCharacter) ⇒ StatusEffect",
+          "description": "Накладывает статус-эффект персонажу. Конкретное поведение эффекта определяется его StatusEffectData. Аргументы srcIndex, srcTeam, attacker позволяют определить от лица какого персонажа (и игрока) будет происходить действие (например, нанесение урона), если это применимо к этому эффекту. Может вернуть nil, если (1) эффект не может быть наложен, либо (2) если такой эффект уже наложен, при этом Stackable = FALSE и Refreshable = FALSE.",
+          "readonly": false
+        },
+        {
+          "name": "addStatusEffectSelf",
+          "signature": "(data: StatusEffectData, origin: AttackOrigin) ⇒ StatusEffect",
+          "description": "Аналогично addStatusEffect(). Действие будет происходить от лица персонажа, на которого накладывается статус эффект.",
+          "readonly": false
+        },
+        {
+          "name": "setInvisibility",
+          "signature": "(ticks: number, distanceToSee: number) ⇒ void",
+          "description": "Выдает классическую невидимость, как у супера Леона. Позволяет задать длительность и дистанцию, на которой персонаж становится принудительно видимым.",
+          "readonly": false
+        },
+        {
+          "name": "setConsumableShield",
+          "signature": "(value: number, ticks: number) ⇒ void",
+          "description": "Выдает consumable-щит. Позволяет указать его количество здоровья (value) и длительность (ticks).",
+          "readonly": false
+        },
+        {
+          "name": "gainShield",
+          "signature": "(ticks: number, value: number) ⇒ void",
+          "description": "Выдает классический щит. Позволяет указать процент защиты (value) и длительность (ticks).",
+          "readonly": false
+        },
+        {
+          "name": "setStun",
+          "signature": "(ticks: number, skipImmunity: boolean, isSleepy: boolean, isCrossing: boolean) ⇒ boolean",
+          "description": "Накладывает классический эффект стана. Позволяет указать длительность (ticks) и подтип (isSleepy, isCrossing).",
+          "readonly": false
+        },
+        {
+          "name": "push",
+          "signature": "(pushX: number, pushY: number, strength: number, canFly: boolean, a7: boolean, a8: boolean, a9: boolean, skipCCImmunity: boolean, a11: boolean, a12: boolean, a13: boolean, useFixedDistance: boolean, stunTicks: number, speedModifier: number) ⇒ void",
+          "description": "Отталкивает персонажа от указанной точки. Сила (strength) определяет расстояние отталкивания.",
+          "readonly": false
+        }
+      ]
+    },
+    "Skill": {
+      "description": "",
+      "parent": null,
+      "fields": [
+        {
+          "name": "data",
+          "signature": "SkillData (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "activeTicksLeft",
+          "signature": "number (readonly)",
+          "description": "Количество тиков, через которое скилл перейдет из активного в неактивное состояние. Монотонно убывает. Если скилл не в активном состоянии, то равен нулю.",
+          "readonly": true
+        },
+        {
+          "name": "chargeValue",
+          "signature": "number (readonly)",
+          "description": "Текущие патроны. Актуально только для основной атаки. Одна единица равна 1/1000 патрона.",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "setUpgradeLevel",
+          "signature": "(level: number) ⇒ void",
+          "description": "Выставляет уровень улучшения этого скилла. Считается с нуля. Влияет на урон и другие параметры его атаки.",
+          "readonly": false
+        },
+        {
+          "name": "getMaxCharge",
+          "signature": "() ⇒ number",
+          "description": "Максимальное значение для патронов. Актуально только для основной атаки. Одна единица равна 1/1000 патрона.",
+          "readonly": false
+        },
+        {
+          "name": "charge",
+          "signature": "(percent: number) ⇒ void",
+          "description": "Позволяет добавить или убавить текущие патроны. Актуально только для основной атаки. Аргумент выражается в 1/100 патрона и может быть отрицательным.",
+          "readonly": false
+        },
+        {
+          "name": "isWeaponSkill",
+          "signature": "() ⇒ boolean",
+          "description": "Возвращает true, если это основная атака.",
+          "readonly": false
+        },
+        {
+          "name": "isUltiSkill",
+          "signature": "() ⇒ boolean",
+          "description": "Возвращает true, если это супер.",
+          "readonly": false
+        }
+      ]
+    },
+    "StatusEffect": {
+      "description": "",
+      "parent": null,
+      "fields": [
+        {
+          "name": "data",
+          "signature": "StatusEffectData (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ticksTotal",
+          "signature": "number (readonly)",
+          "description": "Общее количество тиков, в течение которых действует этот статус-эффект.",
+          "readonly": true
+        },
+        {
+          "name": "ticksLeft",
+          "signature": "number (readonly)",
+          "description": "Оставшееся количество тиков, в течение которых действует этот статус-эффект. Монотонно убывает.",
+          "readonly": true
+        },
+        {
+          "name": "damageBase",
+          "signature": "number",
+          "description": "Базовое значение периодического урона без учета баффов и уровня.",
+          "readonly": false
+        },
+        {
+          "name": "healingBase",
+          "signature": "number",
+          "description": "Базовое значение периодического исцеления без учета баффов и уровня.",
+          "readonly": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "cancel",
+          "signature": "() ⇒ void",
+          "description": "Прекращает действие статус-эффекта.",
+          "readonly": false
+        },
+        {
+          "name": "addTicks",
+          "signature": "(number) ⇒ void",
+          "description": "Продлевает действие статус-эффекта на указанное количество тиков.",
+          "readonly": false
+        },
+        {
+          "name": "isActive",
+          "signature": "() ⇒ boolean",
+          "description": "Позволяет узнать, активен ли статус-эффект в текущий момент времени.",
+          "readonly": false
+        }
+      ]
+    },
+    "LogicProjectile": {
+      "description": "Наследуется от LogicGameObject. Снаряд. Летит по заданной траектории, может наносить урон персонажам и не только.",
+      "parent": "LogicGameObject",
+      "fields": [
+        {
+          "name": "finishState",
+          "signature": "number (readonly)",
+          "description": "Изначально равен нулю. При завершении движения выставляется положительное значение: 1 — достигнута предельная дистанция, 2 — попадание в границу карты, 3 — попадание в персонажа, 4 — попадание в блок, 5 — уничтожен извне.",
+          "readonly": true
+        },
+        {
+          "name": "shotCharacter",
+          "signature": "LogicCharacter (readonly)",
+          "description": "Изначально равен nil, но если попадание произошло в персонажа, то этот персонаж будет записан в это поле.",
+          "readonly": true
+        },
+        {
+          "name": "origin",
+          "signature": "AttackOrigin (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "setFinishState",
+          "signature": "(finishState: number) ⇒ void",
+          "description": "",
+          "readonly": false
+        }
+      ]
+    },
+    "LogicAreaEffect": {
+      "description": "Наследуется от LogicGameObject. Зона с эффектом. Действует на персонажей (и некоторые снаряды), механика зависит от конкретного эффекта.",
+      "parent": "LogicGameObject",
+      "fields": [
+        {
+          "name": "ownerCharacter",
+          "signature": "LogicCharacter (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "origin",
+          "signature": "AttackOrigin (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "damage",
+          "signature": "number",
+          "description": "Урон, который будет наносить этот эффект персонажам в зоне действия.",
+          "readonly": false
+        },
+        {
+          "name": "ultiEnergy",
+          "signature": "number",
+          "description": "Количество супера, которое будет заряжаться у игрока при каждом нанесения урона.",
+          "readonly": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "setSource",
+          "signature": "(index: number, team: number, ownerCharacter: LogicCharacter, origin: AttackOrigin) ⇒ void",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "isObjectInside",
+          "signature": "(object: LogicGameObject) ⇒ boolean",
+          "description": "Проверяет, находится ли игровой объект внутри зоны действия эффекта.",
+          "readonly": false
+        },
+        {
+          "name": "destroy",
+          "signature": "() ⇒ void",
+          "description": "Уничтожает этот эффект немедленно.",
+          "readonly": false
+        },
+        {
+          "name": "trigger",
+          "signature": "() ⇒ void",
+          "description": "Начинает действие этого эффекта. Необходимо вызвать один раз после добавления в GameObjectManager.",
+          "readonly": false
+        }
+      ]
+    },
+    "LogicItem": {
+      "description": "Наследуется от LogicGameObject. Предмет. В большинстве случаев его можно поднять или активировать.",
+      "parent": "LogicGameObject",
+      "fields": [
+        {
+          "name": "isTriggered",
+          "signature": "boolean (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "triggeredCharacter",
+          "signature": "LogicCharacter (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ownerCharacter",
+          "signature": "LogicCharacter (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "origin",
+          "signature": "AttackOrigin (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "sprayDataIndex",
+          "signature": "number",
+          "description": "Если предмет является спреем (Spray), тогда указывает на индекс конкретного спрея.",
+          "readonly": false
+        }
+      ],
+      "methods": [
+        {
+          "name": "setSource",
+          "signature": "(index: number, team: number, ownerCharacter: LogicCharacter, origin: AttackOrigin) ⇒ void",
+          "description": "",
+          "readonly": false
+        },
+        {
+          "name": "destroy",
+          "signature": "() ⇒ void",
+          "description": "Уничтожает этот предмет немедленно.",
+          "readonly": false
+        }
+      ]
+    },
+    "Accessory": {
+      "description": "",
+      "parent": null,
+      "fields": [
+        {
+          "name": "data",
+          "signature": "AccessoryData (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "isActive",
+          "signature": "boolean (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": []
+    },
+    "TileMap": {
+      "description": "Карта боя, содержит тайловую сетку и позволяет работать с ней.",
+      "parent": null,
+      "fields": [
+        {
+          "name": "tileSizeX",
+          "signature": "number (readonly)",
+          "description": "Ширина карты в клетках.",
+          "readonly": true
+        },
+        {
+          "name": "tileSizeY",
+          "signature": "number (readonly)",
+          "description": "Высота карты в клетках.",
+          "readonly": true
+        },
+        {
+          "name": "absSizeX",
+          "signature": "number (readonly)",
+          "description": "Абсолютная ширина карты.",
+          "readonly": true
+        },
+        {
+          "name": "absSizeY",
+          "signature": "number (readonly)",
+          "description": "Абсолютная высота карты.",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "destructTile",
+          "signature": "(x: number, y: number, isBasicWeapon: boolean) ⇒ void",
+          "description": "Уничтожает блок на заданной клетке.",
+          "readonly": false
+        },
+        {
+          "name": "setDynamicTile",
+          "signature": "(data: TileData, x: number, y: number, ownerCharacter: LogicCharacter) ⇒ void",
+          "description": "Выставляет динамический блок на заданной клетке. Данный блок должен иметь DynamicCode != 0.",
+          "readonly": false
+        },
+        {
+          "name": "getTile",
+          "signature": "(x: number, y: number) ⇒ Tile",
+          "description": "Возвращает тайл по тайловым (клеточным) координатам. Возвращает nil, если задана точка вне карты.",
+          "readonly": false
+        }
+      ]
+    },
+    "Tile": {
+      "description": "Конкретная клетка на карте.",
+      "parent": null,
+      "fields": [
+        {
+          "name": "data",
+          "signature": "TileData (readonly)",
+          "description": "Текущий TileData этой клетки.",
+          "readonly": true
+        },
+        {
+          "name": "dataOriginal",
+          "signature": "TileData (readonly)",
+          "description": "Оригинальный TileData этой клетки. Загружается один раз и не меняется в течение боя.",
+          "readonly": true
+        },
+        {
+          "name": "x",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "y",
+          "signature": "number (readonly)",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "isDynamic",
+          "signature": "() ⇒ boolean",
+          "description": "Возвращает true, если этот тайл был выставлен динамически.",
+          "readonly": false
+        },
+        {
+          "name": "restoreOriginal",
+          "signature": "() ⇒ void",
+          "description": "Восстанавливает изначальное состояние тайла с момента начала боя.",
+          "readonly": false
+        }
+      ]
+    },
+    "AttackOrigin": {
+      "description": "Является перечислением. ",
+      "parent": null,
+      "fields": [
+        {
+          "name": "ACCESSORY",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COMPONENT",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTERNAL",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GAME_MODE",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCOMING_DAMAGE",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MODIFIER",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NEW_ROUND",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGE",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGE_ABILITY",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PASSIVE_CHARGING",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PASSIVE_HEALING",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDIRECT_SHIELD",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STAR_POWER",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ULTI",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNUSED_14",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNUSED_15",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNUSED_16",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNUSED_17",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNUSED_9",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "WEAPON",
+          "signature": "AttackOrigin",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": []
+    },
+    "CharacterType": {
+      "description": "Является перечислением. ",
+      "parent": null,
+      "fields": [
+        {
+          "name": "AIR_DISC",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ALTERNATOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "AMBUSHER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ANGELIC_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ANGELIC_PET_BIG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ANGELIC_PET_SIEGE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARCADE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARCADE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_BASE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_BIG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_MELEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_RANGE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_SMALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_SPECIAL_MELEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_TOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA_TOWER_DESTROYED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARTILLERY_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARTILLERY_DUDE_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARTILLERY_DUDE_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ASSAULT_SHOTGUN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ASSAULT_SHOTGUN_BOMB_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ASSAULT_SHOTGUN_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ATTACHER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ATTRACTOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "AXE_JUGGLER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BARKEEP",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BARREL_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BASEBALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BASEBALL_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BASKET_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BEAMER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BEE_SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BEE_SNIPER_SLOW_POT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BLACK_HOLE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BLACK_HOLE_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BLACK_HOLE_PET_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BLACK_HOLE_PET_GADGET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BLOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BONE_THROWER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOSS_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOSS_MINION_ST",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOSS_RACE_BOSS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOULDER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOW_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOW_DUDE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOW_DUDE_TOTEM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOW_DUDE_TOTEM_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOX_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BULLETSTORM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BULL_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BULL_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CACTUS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CACTUS_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CACTUS_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CACTUS_COVER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CACTUS_COVER_NANO_FAKE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CANNON_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CANNON_GIRL_SMALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CAPTURE_FLAG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHARGE_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHARGE_PUCK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHRONOMANCER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CLUSTER_BOMB_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CLUSTER_BOMB_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COCOONER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COCOONER_COCOON",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COCOONER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CONDUCTOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CONDUCTOR_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CONTROLLER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CONTROLLER_ADDON",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOKER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_BOSS_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_BOSS_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_BOSS_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_FAST_MELEE_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_FAST_MELEE_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_FAST_MELEE_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_FAST_MELEE_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_MELEE_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_MELEE_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_MELEE_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_MELEE_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_RANGED_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_RANGED_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_RANGED_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "COOP_RANGED_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CRAB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CROSS_BOMBER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CROSS_BOMBER_VISION_TOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CROW",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CROW_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAMAGE_BOOSTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAMAGE_BOOSTER_OVERCHARGE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DANCER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DANCER_FAIRY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAREDEVIL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DEAD_MARIACHI",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DEAD_MARIACHI_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DEMONIC_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DEMONIC_PET_SIEGE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DIGGER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DIGGER_DRILL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DODGE_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DOMAIN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DOOR_MAN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DRAGON_RIDER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DRILLER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DUELIST",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DUPLICATOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DUPLICATOR_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ELECTRO_SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ENRAGER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ENRAGER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EVENT_MODIFIER_BOSS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXPLODING_BARREL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXPLODING_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTRACTION_FAST_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTRACTION_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTRACTION_RANGED_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FIRE_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FIRE_DUDE_BARREL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FIRE_DUDE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FISH_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA_BIG_EGG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA_EXTRA_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA_HEALING_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA_OVERCHARGED_BIG_EGG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FLEA_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FURY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FUTURE_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FUTURE_GIRL_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GEISHA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GEISHA_TRANSFORMED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GHOST",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GHOST_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GLADIATOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GOALKEEPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GODZILLA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GUNSLINGER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GUNSLINGER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HAMMER_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HAMMER_DUDE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEALING_STATION",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEIST_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HIGHLIGHT_ENVIRONMENT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HOCKEY_GOALKEEPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HOLDING_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HOOK_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ICE_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INSECT_MAN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INVASION_BOSS_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INVASION_FAST_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INVASION_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INVASION_RANGED_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "JESTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "JETPACK_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "JETPACK_GIRL_DAMAGE_TOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KATANA_KID",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KICKER_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KNIGHT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KNIGHT_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LASER_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LAST_STAND_MINION",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LEAPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LIGHTYEAR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LIGHTYEAR_FLIGHT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LIGHTYEAR_SWORD",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LOOT_BOX",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LOVE_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LUCHADOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LUCHADOR_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MAGICAL_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MAGICAL_GIRL_FLY_AREA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MAISIE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHANIC",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHANIC_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_DUDE_ADDON",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_DUDE_BIG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_DUDE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_DUDE_RELOAD_TOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_BOSS_MELEE_NINJA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_BOSS_SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_BOSS_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_CART",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_FODDER_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_FODDER_MELEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_FODDER_RANGED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_FRIENDLY_MEG_BOSS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_MINI_MELEE_NINJA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_MINI_SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MECHA_VAN_MINI_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEEPLE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_BEAR_WITH_NITA_CUSTOM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_BLACKHOLE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_BLACK_HOLE_EXPLODE_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_BLACK_HOLE_SHIELD_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CACTUS_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CHRONOMANCER_L_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CHRONOMANCER_L_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CLUSTER_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CLUSTER_BOMB_PET_BIG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CLUSTER_BOMB_PET_MID",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CLUSTER_BOMB_PET_SMALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_DRAGON_L_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_DRAGON_L_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_DRAGON_L_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_DRAGON_L_3_GHOST_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_RED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_CROW_WHITE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO_20_P",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO_5_P",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO_ANGRY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO_ANGRY_20_P",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_DUO_ANGRY_5_P",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_EMZ",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_FANG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_FINX_KITTEN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_FIX_STASIS_TOWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_FIX_STASIS_TOWER_SECOND",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_FRANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_GHOST",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_GRIFF",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_GROM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_GROM_RAT_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_INSECT_MAN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_KATANA_KID",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_KATANA_KID_FISH_SPAWNER_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_KATANA_KID_FISH_SPAWNER_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_KENJI",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_KENJI_GHOST",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_MAISIE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_MAISIE_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_NITA_WITH_BEAR_CUSTOM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_PERCENTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_PERCENTER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_PERCENTER_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_ROCKET_GIRL_L_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_ROCKET_GIRL_L_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_ROCKET_GIRL_L_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_SHAMAN_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_SPIKE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_SPLITTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_SPLITTER_HEAD",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_STICKY_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_ST_DG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_ST_VEC",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_TRICKSHOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_TRICKSHOT_BRAWLENTINES",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_TRICKSHOT_BRAWLENTINES_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_BOSS_TRICKSHOT_BRAWLENTINES_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_FRANK_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_KENJI_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_SAMURAI_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_SAMURAI_RANGED_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_SPLITTER_TWINS_ENEMY_SHOOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MEGA_SPLITTER_TWINS_ENEMY_THROW",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MELEE_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MELEE_FAST_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MENDER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CART_0",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CART_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CART_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CART_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CART_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINIGUN_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MORNINGSTAR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MULTI_LASER_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MUMMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MUMMY_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_DELIVERY_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_FODDER_MELEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_FODDER_RANGED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_MELEE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_RANGED",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_GUARD_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_0",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_10",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_11",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_12",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_13",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_14",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_15",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_16",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_17",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_18",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_19",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_5",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_6",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_7",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_8",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NANO_INGREDIENT_9",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_FAKE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_INVISIBLE_AREA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_INVISIBLE_AREA_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_MUTATION",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "NINJA_NANO_POWER_CLONE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_DUPLICATOR_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_FUTURE_GIRL_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_HEALING_STATION",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_REDIRECTER_SNAKE_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_SPAWNER_DUDE_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERCHARGED_SPAWNER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PAINTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PAINT_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PAYLOAD",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PAYLOAD_SINGLE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PERCENTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PERCENTER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PERCENTER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POISON_BARREL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POWER_LEVELER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POWER_LEVELER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PUPPETEER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_FAST_MELEE_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_FAST_MELEE_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_FAST_MELEE_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_FAST_MELEE_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_MELEE_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_MELEE_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_MELEE_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_MELEE_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_RANGED_ENEMY_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_RANGED_ENEMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_RANGED_ENEMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_RANGED_ENEMY_4",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RAID_BOSS_TOWN_CRUSH",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RANDOM_LOOT_BOX",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RANGED_BOT",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDIRECTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDIRECTER_COCOON",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDIRECTER_SNAKE_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REVIVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROBO_WARS_BASE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROBO_WARS_BOX",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROBO_WARS_ROBO",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROCK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROCKET_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROCKET_GIRL_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROLLER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROPE_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ROSA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RUFFS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RUFFS_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAFE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAFE_DEEPSEA",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAFE_KATANA_KINGDOM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAFE_VOXEL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAMURAI",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAMURAI_BOSS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAMURAI_FAST_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAMURAI_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SAMURAI_RANGED_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SANDSTORM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHADOWDEMON",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHADOWDEMON_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHADOW_SMASH_SPIDER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHAMAN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHAMAN_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHAMAN_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHIELD_TANK",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOTGUN_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOTGUN_GIRL_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHURIKEN",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SILENCER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SKATER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SNAKE_OIL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SOUL_COLLECTOR",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SOUL_COLLECTOR_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_DUDE_TURRET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_DUDE_TURRET_002",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_DUDE_TURRET_003",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_PET_002",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_PET_003",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNER_PET_GADGET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPEEDER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPEEDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPEEDY_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPEED_BOOSTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPLITTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPLITTER_LEGS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STACKER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STACKER_MOTH",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STACKER_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STALKER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STARFISH",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STICKY_BOMB",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STU_DRUMS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUBWAY_GUARD",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_BEE_SNIPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_CACTUS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_CACTUS_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_FIRE_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_MAGICAL_GIRL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_VOODOO",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SUPER_NOVA_VOODOO_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWARM_HUNTER_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWARM_SAMURAI_FAST_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWARM_SAMURAI_MELEE_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWARM_SAMURAI_MELEE_MINI_BOSS_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWARM_SAMURAI_RANGED_ENEMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TANK_ARCHETYPE_COVER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TNT_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TNT_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAINING_DUMMY_BIG",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAINING_DUMMY_MEDIUM",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAINING_DUMMY_SHOOTING",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAINING_DUMMY_SMALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAIN_0",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAIN_1",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAIN_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRAIN_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRICKSHOT_DUDE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRICKSHOT_DUDE_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRICKSHOT_DUDE_GADGET_SKILL_CONTAINER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRICKSHOT_DUDE_GADGET_SKILL_CONTAINER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TROPHY_CRITTER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TUTORIAL_DUMMY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TUTORIAL_DUMMY_2",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TUTORIAL_DUMMY_3",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TUTORIAL_EXPLODING_BARREL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TWINS",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TWINS_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TWINS_PET_HYPER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNDERTAKER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNDERTAKER_BUDDY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "UNO_CARD",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "VOLLEY_BALL",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "VOLLEY_BALL_ZOMBIE",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "VOODOO",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "VOODOO_PET",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "WALLY",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "WEAPON_THROWER",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "WHIRLWIND",
+          "signature": "CharacterType",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": []
+    },
+    "TraitType": {
+      "description": "Является перечислением. ",
+      "parent": null,
+      "fields": [
+        {
+          "name": "ACTIVE_TIME_BASIC_ATTACKS_ADD_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ACTIVE_TIME_BASIC_ATTACK_ADD_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADDITIONAL_AREA_EFFECT_FOR_EXPLODE_SOULS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ACTION_TO_AREA_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ACTIVE_TIME_ULTI_ATTACK_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ADDITIONAL_AREA_EFFECT_AT_END_OF_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_CUSTOM_VALUE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_DURATION_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_PERCENT_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_THAT_FOLLOWS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AREA_EFFECT_THAT_FOLLOWS_EVERY_X_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ATTACHER_FRIENDLY_ATTACH_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AUTO_CHARGE_HC_RATE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_AUTO_CHARGE_ULTI_RATE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BASIC_ATTACK_NUM_BULLETS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BASIC_ATTACK_RECHARGE_TIME_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BASIC_ATTACK_STEER_STRENGTH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BEAMER_STAND_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BOOMERANG_TO_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLETSTORM_SHELLS_PER_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLET_EXPLOSION_BULLET_DISTANCE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLET_EXPLOSION_NUMBER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLET_SIZE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLET_SIZE_PERCENT_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_BULLET_SIZE_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CAMERA_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CASTING_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CASTING_RANGE_CONE_MELEE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CASTING_RANGE_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CASTING_RANGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CASTING_RANGE_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_AREA_EFFECT_TO_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_AREA_EFFECT_TO_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_AREA_EFFECT_TO_ULTI_PROJECTILE_MOD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_BULLETS_MAX_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_BULLET_NUMBER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_PROJECTILE_TO_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_SPREAD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHAIN_TRAVEL_DISTANCE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARACTER_AUTO_ATTACK_SPEED_MS_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARACTER_HEALTH_PROMILLE_LOST_PER_SECOND_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_SPEED_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_ULTI_AUTOMATICALLY_PER_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_ULTI_FROM_HEALING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_ULTI_WHEN_RECEIVING_DMG",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_ULTI_WHEN_RECEIVING_DMG_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CHARGE_UP_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_COMPONENT_TO_DEFAULT_PET",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CONSUMABLE_SHIELD_AMOUNT_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CONSUMABLE_SHIELD_ON_MOVING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CONSUMABLE_SHIELD_ON_PET_SPAWN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CONSUMABLE_SHIELD_ON_SPAWN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_CONSUMABLE_SHIELD_WHEN_DEALING_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DAMAGE_IN_BUSH_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DAMAGE_PERCENT_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DAMAGE_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DAMAGE_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DASH_ON_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_DEATH_AREA_EFFECT_TO_PETS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EFFECT_PLAY_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EFFECT_SIZE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_HEALTH_TO_SUMMONED_MINIONS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_HEALTH_TO_SUMMONED_MINIONS_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_SCALE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_SCALE_OVERTIME_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_SCALE_TO_PETS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_EXTRA_SCALE_TO_SHADOW_CLONE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_FIRE_PUNCH_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_FOLLOWED_EFFECT_WHILE_CHARGING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_GADGET_USE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_GLOWY_EXTRA_ENEMY_LINKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_HC_ACTIVE_TIME_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_HC_ONLY_CHARGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_HIGH_HEALTH_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_HOLD_CHARGE_UP_TIME_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ITEM_SIZE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ITEM_VALUE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ITEM_VALUE_2_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_KATANA_KID_FISH_PER_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_KNIGHT_RAGE_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_LOW_HEALTH_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_MAX_NUMBER_OF_PORTALS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_MAX_SPAWNS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_MIND_CONTROLLED_CHARACTER_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_MOUNT_UP_DURATION_TICKS_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_MS_BETWEEN_ATTACK_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_NORMAL_DISTANCE_ADD_FROM_BOUNCE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_NUMS_CHAINS_TO_ENEMIES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_NUM_MAX_ITEMS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_NUM_SPAWNS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ONE_HP_SHIELD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PARTIAL_STUN_PROMILLE_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PARTIAL_STUN_PROMILLE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PARTIAL_STUN_PROMILLE_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PICKUP_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_CIRCLE_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_CUSTOM_UNIQUE_PROPERTY_VALUE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_DMG_PERCENTAGE_END_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_DMG_PERCENTAGE_START_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_EFFECT_PLAY_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_SPEED_PERCENT_NORMAL_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_SPEED_PERCENT_ONLY_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_SPEED_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PROJECTILE_STEER_STRENGTH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_PUSHBACK_STRENGTH_TO_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_REFLECT_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_REGEN_SPEED",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_RELOAD_SPEED_BUFF_TO_PETS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_RELOAD_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_RELOAD_SPEED_WHEN_ENRAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_REVIVE_WINDOW_TIME_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ROLL_SPEED_PERCENT_WHEN_HIT_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SALVO_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SCALE_TO_HEAD_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SELF_HEAL_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SEQUENCE_ATTACK_EXTRA_STEPS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SHADOWDEMON_MAX_CLONES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SHADOWDEMON_MAX_RELEASED_DEMONS_PER_CAST",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SILENCE_TIME_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SPREAD_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SPREAD_BASIC_ATTACK_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_SPREAD_ULTI_ATTACK_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_ON_START",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_SPEED_BOOST_ABSOLUTE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TIME_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TO_CHARACTER_ON_HIT_1",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TO_CHARACTER_ON_HIT_2",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TO_ENEMY_ON_SUPER_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TO_PROJECTILE_FOR_ALLIES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_STATUS_EFFECT_TO_PROJECTILE_FOR_ENEMIES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_TEAMMATE_HEAL_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_TEAMMATE_HEAL_PERCENT_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_TEAMMATE_HEAL_PERCENT_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_TRANSFORM_TICKS_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_TRAVEL_TYPE_VARIABLE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_ATTACK_NUM_BULLETS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_DISTANCE_ADD_FROM_BOUNCE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_ONLY_CHARGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_ONLY_CHARGE_PERCENT_ON_BOUNCE_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_STEER_LIFE_TIME_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_STEER_STRENGTH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_ULTI_USE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_VISIBILITY_RECT_SIZE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_VISION_IN_BUSH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_WEAPON_SKILL_MAX_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ADD_WEAPON_SKILL_MAX_CHARGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_CONSUMABLE_SHIELD_WHEN_USING_GADGET",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_CONSUMABLE_SHIELD_WHEN_USING_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_APPLY_STATUS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_LONG_DASH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_MEDIKIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_ON_STUN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_TO_ALLIES_ALL_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_TO_ENEMIES_ALL_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_TO_ENEMIES_ON_HIT_WITH_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_WHEN_DEAD_CENTER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_WHEN_USING_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "APPLY_STATUS_EFFECT_WHILE_INVISIBLE_DURING_SUPER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOOST_ULTI_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BULLET_EXPLOSION_ALIGN_BRAWLER_FACING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CC_IMMUNITY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHAIN_PROJECTILE_TRIGGERS_SPAWN_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHARGE_ULTI_BY_HEALING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHARGE_ULTI_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "CHARGE_ULTI_ON_MOVE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAMAGE_ENEMIES_ON_PUSHBACK_LANDING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAMAGE_OUTPUT_REDUCE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DAMAGE_REDUCTION_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DECREASE_GADGET_COOLDOWN_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DISABLE_VISION_IN_BUSH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DROP_POWERCUBE_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DROP_POWERCUBE_ON_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXECUTE_BELOW_HEALTH_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTRA_ULTI_CHARGE_FROM_AREA_EFFECT_INNER_RADIUS_HERO_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "EXTRA_ULTI_DURATION",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "FINX_TOWER_UNTARGETABLE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GAIN_MAX_HP_KEEP_DEFICIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GAIN_MAX_HP_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEALING_BUFF",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEAL_ON_KILL_IF_ENEMY_HAS_STATUS_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEAL_PERCENT_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEAL_PERCENT_ON_SUPER_USE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEAL_WHILE_MOVING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HIDDEN_DURING_ATTACK_IN_FOREST",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "IGNORE_CHARGE_RESET",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "IGNORE_LO_SFOR_MENDER_LINK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "IGNORE_STATUS_EFFECTS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_HERO_MAX_HP_ABSOLUTE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_MAX_HP",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_MAX_HP_ABSOLUTE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_MAX_HP_ABSOLUTE_ON_KILL_OVERTIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_PET_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_SPEED_IN_BUSH_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_SPEED_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_SPEED_PERCENT_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_SPEED_PERCENT_WHILE_SKILL_ACTIVE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_SPEED_PERCENT_WITH_SHIELD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INCREASE_STATUS_EFFECTS_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INSTANT_CHARGE_HC_PERCENT_AT_START",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INSTANT_CHARGE_SUPER_PERCENT_AT_RESPAWN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INSTANT_CHARGE_SUPER_PERCENT_AT_START",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "INVISIBLE_ON_WATER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ITEM_ADDITIONAL_AREA",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LIFE_STEAL_FROM_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LIFE_STEAL_FROM_DAMAGE_PERCENT_ONLY_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "LOW_HEALTH_SHIELD_TAKEDOWN_STATUS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MAIN_ATTACK_PROJECTILE_HEAL_ON_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MELEE_DEAD_CENTER_BOOST",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MELEE_DEAD_CENTER_BOOST_OVERCHARGED",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MELEE_DEAD_CENTER_REDUCE_ACCESSORY_COOLDOWN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINE_CLEAR_SOFT_CAP_ONLY_OVER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MINION_DUPLICATE_AUTO_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MODIFIED_CHAIN_PROJECTILE_ON_WALL_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MS_BETWEEN_BASIC_ATTACKS_ADD_PERCENTAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MS_BETWEEN_BASIC_ATTACKS_MULTIPLY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "MULTIPLY_POWER_CUBE_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERHEAL_SHIELD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ACTIVE_TIME_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_AREA_EFFECT_2_DAMAGE_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_AREA_EFFECT_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_AREA_EFFECT_STATUS_EFFECT_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_CASTING_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_HOME_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_IS_BOOMERANG",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_PATTERN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_PATTERN_AT_FULL_AMMO",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_RECHARGE_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_STEER_IGNORE_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_STEER_LIFE_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BASIC_ATTACK_TRAVEL_TYPE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BULLET_EXPLOSION_CURVATURE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_BULLET_EXPLOSION_CURVATURE_ADDED_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHAIN_AREA_EFFECT_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHAIN_CHARGE_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHAIN_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHAIN_PROJECTILE_TRAVEL_TYPE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHARGE_SPEED",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHARGE_UP",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHARGE_UP_MAX",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CHARGE_UP_TYPE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_CONSUMABLE_SHIELD_DECAY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_DAMAGE_RECEIVED_BOOST_PERCENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_DISTANCE_ADD_FROM_BOUNCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_DISTANCE_ADD_FROM_BOUNCE_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ENEMY_STATUS_EFFECT_TO_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_GADGET_COOLDOWN_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_IS_BOUNCING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_LVL_UP_VALUE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MAX_DISTANCE_ADD_BOUNCES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MAX_DISTANCE_ADD_BOUNCES_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MAX_SPAWNS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MELEE_ATTACK_PIERCE_ENVIRONMENT_LIKE_BUTTER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MOUNT_UP_DURATION_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MS_BETWEEN_ATTACK_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_MS_BETWEEN_BASIC_ATTACKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUMS_CHAINS_FORWARD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_BULLETS_IN_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_BULLETS_IN_BASIC_ATTACK_BULLET_EXPLOSION",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_BULLETS_IN_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_BULLETS_IN_ULTI_EXPLOSION_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_MAX_ITEMS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_NUM_SPAWNS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PASS_ENVIRONMENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PET_ATTACK_PATTERN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PIERCES_CHARACTERS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PIERCES_ENVIRONMENT_LIKE_BUTTER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PIERCE_ENVIRONMENT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_DAMAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_DMG_PERCENTAGE_OVER_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_HOME_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_STEER_IGNORE_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PROJECTILE_TRAVEL_TYPE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_PUSH_BACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPAWN_AREA_EFFECT_1_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPAWN_AREA_EFFECT_2_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPAWN_CHARACTER_RANDOM_DIST",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPEED_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPREAD_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_SPREAD_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_TRANSFORM_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_TRIGGER_WITH_DELAY_MS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_ATTACK_PATTERN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_CASTING_RANGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_HOME_DISTANCE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_SKILL_TARGET_SELF",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_STEER_IGNORE_TICKS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_STEER_LIFE_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "OVERRIDE_ULTI_TRAVEL_TYPE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PERCENTER_HC_BUDDY_PROJECTILE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PETROL_GIVES_STATUS_EFFECT_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PETROL_GIVES_STATUS_EFFECT_SELF",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PET_LIFESTEAL_OVERHEAL_SHIELD",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PET_TOO_CLOSE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PLUGGED_IN_FOR_TEAMMATES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POWER_CUBE_DOUBLE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POWER_CUBE_MORE_EFFECTIVE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "POWER_LEVELER_STATUS_ON_ULTI_AT_STAGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PREVENT_LOSING_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "PROJECTILE_BOUNCE_TRIGGERS_SPAWN_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RECEIVE_STATUS_EFFECT_BASED_ON_NUMBER_OF_APPLIED_STATUS_EFFECTS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDUCE_ALL_DAMAGE_WHILE_CHARGING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REDUCE_TRIGGER_WITH_DELAY_MS",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "RELOAD_PERCENT_ON_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REVIVE_HERO_EACH_LIFE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REVIVE_PET_ONCE_ON_DEATH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REWIND_GIVE_AMMO",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "REWIND_HEAL_ALLIES",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SET_INVISIBLE_ON_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SET_INVISIBLE_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOOT_PROJECTILE_IF_CHARGE_UP_READY_ON_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOOT_PROJECTILE_ON_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOOT_PROJECTILE_OVER_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SKIP_GADGET_COOLDOWN_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWNED_ITEMS_MOVE_TOWARD_NEAREST_CHARACTER",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_ON_KILL_X",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_ON_STATUS_EXPIRE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_OVER_TIME",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_SELF_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_WHEN_GOING_THROW_PORTAL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_WHILE_CHARGING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_AREA_EFFECT_WHILE_MOVING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_A_TEAM_MATE_SHADOW_EVERY_X_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_ON_AREA_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_ON_GET_HURT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_ON_HIT_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_ON_KILL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_ON_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_CHARACTER_WHILE_MOVING",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_ITEM_ON_HITTING_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_PROJECTILE_ON_START_OR_SELECT_PERK_1",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SPAWN_PROJECTILE_ON_START_OR_SELECT_PERK_2",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "START_WITH_LEVEL",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "START_WITH_POWER_CUBE_E",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "START_WITH_POWER_CUBE_L",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "START_WITH_POWER_CUBE_S",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "START_WITH_POWER_CUBE_ULTRA",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "STEAL_AMMO_ON_CHARGE_HIT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWAP_ATTACK_AT_FULL_HEAT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWAP_ATTACK_EVERY_X_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SWAP_ATTACK_STYLE_EVERY_X_SECOND",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TELEPORT_AFTER_CROSS_SLASH",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TELEPORT_TO_PET_HEAL_PET",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TELEPORT_TO_PET_HEAL_SELF",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_AREA_EFFECT_ON_BASIC_ATTACK",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_AREA_EFFECT_ON_GADGET",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_AREA_EFFECT_WHEN_RECEIVING_DMG",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_AREA_EFFECT_WHEN_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_FOLLOW_AREA_EFFECT_WHEN_RECEIVING_DMG_1",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_FOLLOW_AREA_EFFECT_WHEN_RECEIVING_DMG_2",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_PROJECTILE_ON_HITTING_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_PROJECTILE_TO_ENEMY_ON_HITTING_ENEMY",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_STUN_WITH_CHARGE",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIGGER_TRAIL_TYPE_AREA_EFFECT_WHEN_ULTI",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ULTI_AREA_ADDITIONAL_STATUS_EFFECT",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ULTI_HEAL_SELF_ON_RETURN",
+          "signature": "TraitType",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": []
+    },
+    "GameMode": {
+      "description": "Является перечислением. ",
+      "parent": null,
+      "fields": [
+        {
+          "name": "AIR_HOCKEY",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "AIR_HOCKEY_2_V_2",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "AIR_HOCKEY_5_V_5",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "ARENA",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BASKET_BRAWL",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BASKET_BRAWL_2_V_2",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BOUNTY",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "BRAWL_BALL",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "DUO_SHOWDOWN",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GEM_GRAB",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GEM_GRAB_2_V_2",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "GEM_GRAB_5_V_5",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "HEIST",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KNOCKOUT",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KNOCKOUT_2_V_2",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "KNOCKOUT_5_V_5",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "SHOWDOWN",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        },
+        {
+          "name": "TRIO_SHOWDOWN",
+          "signature": "GameMode",
+          "description": "",
+          "readonly": true
+        }
+      ],
+      "methods": []
+    },
+    "Data": {
+      "description": "Абстрактный класс. Хранит табличные данные (.csv) для какого-то конкретного объекта. Например, Wall1 из tiles.csv будет описываться своим объектом TileData.",
+      "parent": null,
+      "fields": [],
+      "methods": [
+        {
+          "name": "getIndex",
+          "signature": "() ⇒ number",
+          "description": "Возвращает свой индекс в таблице.",
+          "readonly": false
+        },
+        {
+          "name": "getType",
+          "signature": "() ⇒ number",
+          "description": "Возвращает тип (числовой) своей таблицы. Для объектов внутри одной таблицы всегда будет одинаковым.",
+          "readonly": false
+        },
+        {
+          "name": "getGlobalId",
+          "signature": "() ⇒ number",
+          "description": "Возвращает свой уникальный ID. Фактически считается так: (this.getType() * 1000000) + this.getIndex()",
+          "readonly": false
+        },
+        {
+          "name": "getName",
+          "signature": "() ⇒ string",
+          "description": "",
+          "readonly": false
+        }
+      ]
+    },
+    "GameObjectData": {
+      "description": "Наследуется от Data. Абстрактный класс.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "ProjectileData": {
+      "description": "Наследуется от GameObjectData. Хранит табличные данные для каждого снаряда из projectiles_skin.csv и projectiles_logic.csv.",
+      "parent": "GameObjectData",
+      "fields": [],
+      "methods": []
+    },
+    "CharacterData": {
+      "description": "Наследуется от GameObjectData. Хранит табличные данные для каждого персонажа из characters.csv.",
+      "parent": "GameObjectData",
+      "fields": [],
+      "methods": []
+    },
+    "ItemData": {
+      "description": "Наследуется от GameObjectData. Хранит табличные данные для каждого предмета из items.csv.",
+      "parent": "GameObjectData",
+      "fields": [],
+      "methods": []
+    },
+    "AreaEffectData": {
+      "description": "Наследуется от GameObjectData. Хранит табличные данные для каждого скилла из area_effects_skin.csv и area_effects_logic.csv.",
+      "parent": "GameObjectData",
+      "fields": [],
+      "methods": []
+    },
+    "TileData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждого тайла из tiles.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "SkillData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждого скилла из skills.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "LocationData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждой локации из locations.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "SkinData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждого скина из skins.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "StatusEffectData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждого эффекта из status_effects_skin.csv и status_effects_logic.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "AccessoryData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждого гаджета из accessories.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "TraitData": {
+      "description": "Наследуется от Data. Хранит табличные данные для каждой способности из traits.csv.",
+      "parent": "Data",
+      "fields": [],
+      "methods": []
+    },
+    "ArrayList": {
+      "description": "Список.",
+      "parent": null,
+      "fields": [],
+      "methods": [
+        {
+          "name": "get",
+          "signature": "(number) ⇒ Object",
+          "description": "Получает объект из списка по индексу. Нумерация начинается с нуля.",
+          "readonly": false
+        },
+        {
+          "name": "add",
+          "signature": "(Object) ⇒ boolean",
+          "description": "Добавляет объект в список.",
+          "readonly": false
+        },
+        {
+          "name": "size",
+          "signature": "() ⇒ number",
+          "description": "Позволяет получить размер списка.",
+          "readonly": false
+        },
+        {
+          "name": "indexOf",
+          "signature": "(Object) ⇒ number",
+          "description": "Позволяет получить индекс объекта в списке. Равен -1, если не объект не найден.",
+          "readonly": false
+        }
+      ]
+    }
+  }
+}
