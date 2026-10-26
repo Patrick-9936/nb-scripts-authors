@@ -453,5 +453,14 @@
   "Код отправлен на почту или в подключённый Telegram.": "A kódot elküldtük emailben vagy a kapcsolt Telegramra.",
   "Проверьте почту и код подтверждения.": "Ellenőrizd az emailt és a megerősítő kódot.",
   "Неверный код подтверждения.": "Helytelen megerősítő kód.",
-  "Код истёк. Запросите новый.": "A kód lejárt. Kérj újat."
+  "Код истёк. Запросите новый.": "A kód lejárt. Kérj újat.",
+  "Стиль интерфейса": "Felület stílusa",
+  "Плотность интерфейса": "Felület sűrűsége",
+  "Системный стиль": "Rendszerstílus",
+  "Удобная": "Kényelmes",
+  "Компактная": "Kompakt",
+  "Перемешано": "Megkeverve",
+  "Библиотека обновлена": "Könyvtár frissítve",
+  "Скрипт уже открывается": "A szkript már megnyílik",
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "A felület beállításai, a konfigurációk és a paraméterek bejelentkezés után szinkronizálódnak."
 }

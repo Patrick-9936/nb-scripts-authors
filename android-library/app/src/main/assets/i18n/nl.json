@@ -453,5 +453,14 @@
   "Код отправлен на почту или в подключённый Telegram.": "Code verzonden naar je e-mail of gekoppelde Telegram.",
   "Проверьте почту и код подтверждения.": "Controleer je e-mail en verificatiecode.",
   "Неверный код подтверждения.": "Onjuiste verificatiecode.",
-  "Код истёк. Запросите новый.": "Code verlopen. Vraag een nieuwe aan."
+  "Код истёк. Запросите новый.": "Code verlopen. Vraag een nieuwe aan.",
+  "Стиль интерфейса": "Interfacestijl",
+  "Плотность интерфейса": "Interfacedichtheid",
+  "Системный стиль": "Systeemstijl",
+  "Удобная": "Comfortabel",
+  "Компактная": "Compact",
+  "Перемешано": "Geschud",
+  "Библиотека обновлена": "Bibliotheek bijgewerkt",
+  "Скрипт уже открывается": "Het script wordt al geopend",
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Interface-instellingen, configuraties en parameters worden na het aanmelden gesynchroniseerd."
 }

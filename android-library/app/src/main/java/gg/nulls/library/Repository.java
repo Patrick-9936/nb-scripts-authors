@@ -45,7 +45,7 @@ final class Repository {
     String loadCode(String id)throws Exception{Core.requireUuid(id);String cached=code(id);if(cached!=null)return cached;JSONObject account=api.identity();if(account==null)throw new IOException("Требуется вход");String accountId=account.getString("uuid");String value=Core.clean(api.request("GET","/scripts/"+id+"/content",null).getString("content"));synchronized(this){if(api.authenticated()&&accountId.equals(api.identity().optString("uuid"))&&codeBytes+value.length()*2<=24*1024*1024){code.put(id,value);codeBytes+=value.length()*2;}}return value;}
     void index(Progress p)throws Exception{
         if(indexing)return;Localizer language=new Localizer(context);indexing=true;cancelIndex=false;List<JSONObject> list=scripts();
-        ExecutorService pool=Executors.newFixedThreadPool(12);CompletionService<Exception> jobs=new ExecutorCompletionService<>(pool);
+        int parallel=20;ExecutorService pool=Executors.newFixedThreadPool(parallel);CompletionService<Exception> jobs=new ExecutorCompletionService<>(pool);
         java.util.concurrent.atomic.AtomicLong cooldown=new java.util.concurrent.atomic.AtomicLong();int submitted=0,done=0,failed=0;
         try{
             for(JSONObject item:list){String id=item.getString("uuid");if(code(id)!=null)continue;jobs.submit(()->{
@@ -58,7 +58,7 @@ final class Repository {
                 }return null;
             });submitted++;}
             while(done<submitted&&!cancelIndex){Exception error=jobs.take().get();done++;if(error!=null){if(error instanceof Api.Failure&&(((Api.Failure)error).status==401||((Api.Failure)error).status==429))throw error;failed++;}
-                if(done%12==0||done==submitted){indexStatus=language.t("Код: ")+(list.size()-submitted+done)+" / "+list.size()+(failed>0?language.t(" · недоступно: ")+failed:"");p.update(indexStatus);}}
+                if(done%parallel==0||done==submitted){indexStatus=language.t("Код: ")+(list.size()-submitted+done)+" / "+list.size()+(failed>0?language.t(" · недоступно: ")+failed:"");p.update(indexStatus);}}
             indexStatus=language.t("Код: ")+code.size()+" / "+list.size()+(cancelIndex?language.t(" · приостановлено"):"")+(failed>0?language.t(" · недоступно: ")+failed:"");p.update(indexStatus);
         }finally{cancelIndex=true;pool.shutdownNow();indexing=false;writeCodeCache();}
     }

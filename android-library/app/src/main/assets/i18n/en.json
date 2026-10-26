@@ -475,5 +475,14 @@
   "Код отправлен на почту или в подключённый Telegram.": "Code sent to your email or linked Telegram.",
   "Проверьте почту и код подтверждения.": "Check your email and verification code.",
   "Неверный код подтверждения.": "Incorrect verification code.",
-  "Код истёк. Запросите новый.": "Code expired. Request a new one."
+  "Код истёк. Запросите новый.": "Code expired. Request a new one.",
+  "Стиль интерфейса": "Interface style",
+  "Плотность интерфейса": "Interface density",
+  "Системный стиль": "System style",
+  "Удобная": "Comfortable",
+  "Компактная": "Compact",
+  "Перемешано": "Shuffled",
+  "Библиотека обновлена": "Library updated",
+  "Скрипт уже открывается": "The script is already opening",
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Interface settings, configurations, and parameters sync after sign-in."
 }

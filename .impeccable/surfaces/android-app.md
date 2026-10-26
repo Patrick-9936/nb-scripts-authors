@@ -12,7 +12,7 @@ Constraints: preserve all existing functions, themes, localization, package iden
 
 THESIS: Script Library becomes a calm, tactile library of translucent layers; it refuses the noisy gamer dashboard and the flat stack of unrelated white cards.
 
-OWN-WORLD: Material 3 structure with restrained liquid glass: ink-blue and violet accents, translucent tonal surfaces, crisp one-pixel highlights, 16–28 dp radii, system typography, and blur only where one layer visibly floats above another.
+OWN-WORLD: Android-native structure with iOS 26-inspired Liquid Glass: ink-blue and violet accents, translucent controls and surfaces, animated background light, crisp one-pixel highlights, 16–30 dp radii, system typography, and blur where one layer visibly floats above another.
 
 STORY: Cached scripts and account identity appear immediately. Fresh data replaces them quietly. Script details lead to a single fast battle sheet, and every failure offers a clear recovery action inside the same visual language.
 

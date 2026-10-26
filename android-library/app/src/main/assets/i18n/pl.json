@@ -453,5 +453,14 @@
   "Код отправлен на почту или в подключённый Telegram.": "Kod wysłano na email lub połączony Telegram.",
   "Проверьте почту и код подтверждения.": "Sprawdź email i kod weryfikacyjny.",
   "Неверный код подтверждения.": "Nieprawidłowy kod weryfikacyjny.",
-  "Код истёк. Запросите новый.": "Kod wygasł. Poproś o nowy."
+  "Код истёк. Запросите новый.": "Kod wygasł. Poproś o nowy.",
+  "Стиль интерфейса": "Styl interfejsu",
+  "Плотность интерфейса": "Gęstość interfejsu",
+  "Системный стиль": "Styl systemowy",
+  "Удобная": "Wygodny",
+  "Компактная": "Kompaktowy",
+  "Перемешано": "Przetasowano",
+  "Библиотека обновлена": "Biblioteka zaktualizowana",
+  "Скрипт уже открывается": "Skrypt jest już otwierany",
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Ustawienia interfejsu, konfiguracje i parametry synchronizują się po zalogowaniu."
 }

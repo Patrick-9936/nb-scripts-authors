@@ -2,16 +2,16 @@
 name: Script Library
 description: A native Android script library built from calm translucent layers.
 colors:
-  light-ground: "#EDF2FF"
+  light-ground: "#EEF3FF"
   light-surface: "#FFFFFF"
   light-ink: "#121827"
   light-muted: "#596579"
-  light-accent: "#4056D9"
-  dark-ground: "#090D16"
-  dark-surface: "#181E2B"
-  dark-ink: "#F4F7FF"
-  dark-muted: "#A9B2C5"
-  dark-accent: "#9EAFFF"
+  light-accent: "#465BD8"
+  dark-ground: "#080B14"
+  dark-surface: "#171D2A"
+  dark-ink: "#F5F7FF"
+  dark-muted: "#ABB4C7"
+  dark-accent: "#AEBAFF"
   error: "#B4233F"
 typography:
   headline:
@@ -48,7 +48,7 @@ spacing:
 
 **Creative North Star: "The Liquid Library"**
 
-Script Library uses familiar Android structure with a quiet sense of depth. Cool ink-blue grounds and restrained violet accents support dense script content, while translucent tonal surfaces make navigation, dialogs, and bottom sheets feel like parts of one continuous object.
+Script Library uses familiar Android structure with the depth and motion of iOS 26 Liquid Glass. Cool ink-blue grounds and restrained violet accents support dense script content, while translucent tonal surfaces make navigation, controls, dialogs, and bottom sheets feel like parts of one continuous object.
 
 The interface stays functional first: type hierarchy, touch targets, and stable placement carry the task. Glass appears only when one layer floats above another or groups related controls. It never obscures code, metadata, or list density.
 
@@ -59,6 +59,8 @@ The interface stays functional first: type hierarchy, touch targets, and stable 
 - Dense lists paired with generous 48 dp controls.
 - Draggable bottom sheets for deep tasks and details.
 - One accent family for selection and primary actions.
+- A slow gradient backdrop that keeps empty space visually alive without competing with content.
+- Liquid Glass and system-style variants, plus comfortable and compact density.
 
 ## Colors
 
@@ -107,7 +109,7 @@ Phone screens use a compact top app bar, one scrollable work area, and four bott
 
 ## Elevation & Depth
 
-Depth comes from tonal layering, translucency, and system blur on Android 12 and newer. Main cards use a single highlight stroke without a shadow. Only floating navigation and modal layers receive elevation or background blur.
+Depth comes from tonal layering, translucency, a crisp highlight edge, and system blur on Android 12 and newer. Controls and cards share the same glass edge; floating navigation and modal layers add restrained elevation or background blur.
 
 **The Earned Glass Rule.** Blur belongs to floating layers with a clear foreground/background relationship; content cards stay readable without relying on blur.
 
@@ -123,6 +125,7 @@ Controls use 16 dp corners, cards use 22 dp, and sheets use 30 dp top corners. S
 - **Primary:** Solid accent fill, high-contrast label, and leading icon when the action has one.
 - **Secondary:** Translucent surface with ink label and accent icon.
 - **State:** Ripple feedback, disabled native state, and concise progress text nearby.
+- **Motion:** Press to 96.5 percent in 85ms, then settle to full size with a soft 260ms curve.
 
 ### Cards / Containers
 
@@ -144,6 +147,10 @@ Four destinations remain fixed on compact screens. The active item uses the acce
 ### Draggable Sheet
 
 Details, battle settings, profiles, code tools, and pickers rise from the bottom with a visible handle. Dragging the header down dismisses the sheet after a clear threshold; otherwise it settles back into place.
+
+### Glass Notice
+
+Status notices rise above navigation from a small point, expand into a readable glass pill, and collapse after the message has been read. Reduced-motion settings skip the transformation.
 
 ## Do's and Don'ts
 
