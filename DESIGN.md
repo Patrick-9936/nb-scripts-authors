@@ -142,7 +142,7 @@ Controls use 16 dp corners, cards use 22 dp, and sheets use 30 dp top corners. S
 
 ### Navigation
 
-Four destinations remain fixed on compact screens. The active item uses the accent and a quiet tonal selection surface; inactive items use the muted role. Every destination keeps its icon and label.
+Four destinations remain fixed on compact screens. The active item uses the accent and a quiet tonal selection surface; inactive items use the muted role. Every destination keeps its icon and label. Content follows the selected direction with a short horizontal settle, while the active item rises into place.
 
 ### Draggable Sheet
 

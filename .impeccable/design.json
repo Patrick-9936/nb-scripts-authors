@@ -21,6 +21,7 @@
     "motion": [
       {"name":"enter","value":"360ms soft spring curve","purpose":"Bring a new sheet or content surface into place."},
       {"name":"press","value":"85ms down, 260ms settle","purpose":"Give buttons a tactile response without delaying activation."},
+      {"name":"tab-transition","value":"360ms directional settle","purpose":"Connect adjacent bottom-navigation destinations spatially."},
       {"name":"glass-notice","value":"420ms expand, 260ms collapse","purpose":"Reveal status messages from a small point above navigation."},
       {"name":"sheet-settle","value":"180ms decelerate","purpose":"Return a partially dragged sheet to rest."}
     ],
