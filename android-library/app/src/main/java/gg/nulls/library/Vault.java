@@ -15,5 +15,7 @@ final class Vault {
     void save(String user,String password)throws Exception{saveData(new JSONObject().put("user",user).put("password",password));}
     void saveData(JSONObject data)throws Exception{Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.ENCRYPT_MODE,key());String plain=data.toString();String value=Base64.encodeToString(c.getIV(),Base64.NO_WRAP)+":"+Base64.encodeToString(c.doFinal(plain.getBytes(java.nio.charset.StandardCharsets.UTF_8)),Base64.NO_WRAP);context.getSharedPreferences("vault",0).edit().putString("login",value).apply();}
     JSONObject read(){try{String value=context.getSharedPreferences("vault",0).getString("login","");if(value.isEmpty())return null;String[] p=value.split(":");Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,Base64.decode(p[0],Base64.NO_WRAP)));return new JSONObject(new String(c.doFinal(Base64.decode(p[1],Base64.NO_WRAP)),java.nio.charset.StandardCharsets.UTF_8));}catch(Exception e){clear();return null;}}
-    void clear(){context.getSharedPreferences("vault",0).edit().clear().apply();}
+    void saveProfile(JSONObject profile){if(profile==null)return;context.getSharedPreferences("profile_cache",0).edit().putString("identity",profile.toString()).apply();}
+    JSONObject readProfile(){try{String value=context.getSharedPreferences("profile_cache",0).getString("identity","");return value.isEmpty()?null:new JSONObject(value);}catch(Exception ignored){return null;}}
+    void clear(){context.getSharedPreferences("vault",0).edit().clear().apply();context.getSharedPreferences("profile_cache",0).edit().clear().apply();}
 }

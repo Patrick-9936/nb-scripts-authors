@@ -9,22 +9,25 @@ final class Api {
     static class Failure extends IOException { final int status; Failure(int s,String text){super(text);status=s;} }
     private final CookieManager cookies=new CookieManager(null,CookiePolicy.ACCEPT_ORIGINAL_SERVER);
     private volatile String username="",password="",bearer="";
-    private volatile JSONObject me;private volatile long sessionRevision;
+    private volatile JSONObject me,cachedMe;private volatile long sessionRevision;
     private final Vault vault;
-    Api(Vault v){vault=v;}
+    Api(Vault v){vault=v;cachedMe=vault.readProfile();}
     synchronized JSONObject identity(){return me;}
+    synchronized JSONObject visibleIdentity(){return me!=null?me:cachedMe;}
+    synchronized JSONObject cachedIdentity(){return cachedMe;}
     synchronized boolean authenticated(){return me!=null;}
+    private synchronized JSONObject rememberIdentity(JSONObject identity){me=identity;cachedMe=identity;vault.saveProfile(identity);return identity;}
     synchronized JSONObject login(String u,String p,boolean remember)throws Exception{
         sessionRevision++;cookies.getCookieStore().removeAll();bearer="";me=null;username="";password="";
         JSONObject r;
         try{r=raw("POST","/auth/login",new JSONObject().put("username",u).put("password",p));}
         catch(Failure e){if(e.status==401)throw new Failure(401,"Неверное имя пользователя или пароль.");throw e;}
         bearer=r.optString("token",r.optString("access_token",""));
-        try{me=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(me.optString("uuid"));username=u;password=p;if(remember)vault.save(u,p);else vault.clear();return me;}catch(Exception e){clear();throw e;}
+        try{JSONObject identity=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(identity.optString("uuid"));rememberIdentity(identity);username=u;password=p;if(remember)vault.save(u,p);else vault.clear();vault.saveProfile(identity);return me;}catch(Exception e){clear();throw e;}
     }
     synchronized JSONObject register(String name,String user,String pass,boolean remember)throws Exception{
         clear();sessionRevision++;JSONObject result=raw("POST","/auth/register",new JSONObject().put("name",name).put("username",user).put("password",pass));bearer=result.optString("token",result.optString("access_token",""));
-        try{me=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(me.optString("uuid"));username=user;password=pass;if(remember)vault.save(user,pass);return me;}catch(Exception error){clear();throw error;}
+        try{JSONObject identity=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(identity.optString("uuid"));rememberIdentity(identity);username=user;password=pass;if(remember)vault.save(user,pass);else vault.clear();vault.saveProfile(identity);return me;}catch(Exception error){clear();throw error;}
     }
     synchronized JSONObject signInConnect(String token,boolean remember)throws Exception{
         clear();sessionRevision++;JSONObject result=raw("POST","/auth/connect",new JSONObject().put("id_token",token));if(!result.optString("sign_up_token").isEmpty())return result;return finishConnectSession(result,remember);
@@ -33,10 +36,10 @@ final class Api {
         JSONObject result=raw("POST","/auth/connect/register",new JSONObject().put("sign_up_token",token).put("name",name).put("username",user));return finishConnectSession(result,remember);
     }
     private JSONObject finishConnectSession(JSONObject result,boolean remember)throws Exception{
-        bearer=result.optString("token",result.optString("access_token",bearer));me=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(me.optString("uuid"));username=me.optString("username");password="";if(remember){JSONArray stored=new JSONArray();for(HttpCookie cookie:cookies.getCookieStore().getCookies()){if(cookie.hasExpired())continue;stored.put(new JSONObject().put("name",cookie.getName()).put("value",cookie.getValue()).put("domain",cookie.getDomain()).put("path",cookie.getPath()==null?"/":cookie.getPath()).put("secure",cookie.getSecure()).put("httpOnly",cookie.isHttpOnly()));}vault.saveData(new JSONObject().put("session",true).put("bearer",bearer).put("cookies",stored).put("expires",System.currentTimeMillis()+604800000));}return me;
+        bearer=result.optString("token",result.optString("access_token",bearer));JSONObject identity=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(identity.optString("uuid"));rememberIdentity(identity);username=me.optString("username");password="";if(remember){JSONArray stored=new JSONArray();for(HttpCookie cookie:cookies.getCookieStore().getCookies()){if(cookie.hasExpired())continue;stored.put(new JSONObject().put("name",cookie.getName()).put("value",cookie.getValue()).put("domain",cookie.getDomain()).put("path",cookie.getPath()==null?"/":cookie.getPath()).put("secure",cookie.getSecure()).put("httpOnly",cookie.isHttpOnly()));}vault.saveData(new JSONObject().put("session",true).put("bearer",bearer).put("cookies",stored).put("expires",System.currentTimeMillis()+604800000));vault.saveProfile(identity);}return me;
     }
-    synchronized boolean restore()throws Exception{JSONObject o=vault.read();if(o==null)return false;if(o.optBoolean("session")){if(o.optLong("expires")<=System.currentTimeMillis()){clear();return false;}cookies.getCookieStore().removeAll();bearer=o.optString("bearer");JSONArray stored=o.optJSONArray("cookies");if(stored!=null)for(int i=0;i<stored.length();i++){JSONObject item=stored.getJSONObject(i);HttpCookie cookie=new HttpCookie(item.getString("name"),item.getString("value"));String domain=item.optString("domain");if(!domain.equals("scripting.nulls.gg")&&!domain.equals(".scripting.nulls.gg")&&!domain.equals("nulls.gg")&&!domain.equals(".nulls.gg"))continue;cookie.setDomain(domain);cookie.setPath(item.optString("path","/"));cookie.setSecure(item.optBoolean("secure",true));cookie.setHttpOnly(item.optBoolean("httpOnly",true));cookies.getCookieStore().add(URI.create(Core.ORIGIN),cookie);}me=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(me.optString("uuid"));username=me.optString("username");password="";sessionRevision++;return true;}login(o.getString("user"),o.getString("password"),true);return true;}
-    synchronized void clear(){me=null;username="";password="";bearer="";cookies.getCookieStore().removeAll();vault.clear();}
+    synchronized boolean restore()throws Exception{JSONObject o=vault.read();if(o==null)return false;if(o.optBoolean("session")){if(o.optLong("expires")<=System.currentTimeMillis()){clear();return false;}cookies.getCookieStore().removeAll();bearer=o.optString("bearer");JSONArray stored=o.optJSONArray("cookies");if(stored!=null)for(int i=0;i<stored.length();i++){JSONObject item=stored.getJSONObject(i);HttpCookie cookie=new HttpCookie(item.getString("name"),item.getString("value"));String domain=item.optString("domain");if(!domain.equals("scripting.nulls.gg")&&!domain.equals(".scripting.nulls.gg")&&!domain.equals("nulls.gg")&&!domain.equals(".nulls.gg"))continue;cookie.setDomain(domain);cookie.setPath(item.optString("path","/"));cookie.setSecure(item.optBoolean("secure",true));cookie.setHttpOnly(item.optBoolean("httpOnly",true));cookies.getCookieStore().add(URI.create(Core.ORIGIN),cookie);}JSONObject identity=Core.publicUser(raw("GET","/users/me",null));Core.requireUuid(identity.optString("uuid"));rememberIdentity(identity);username=me.optString("username");password="";sessionRevision++;return true;}login(o.getString("user"),o.getString("password"),true);return true;}
+    synchronized void clear(){me=null;cachedMe=null;username="";password="";bearer="";cookies.getCookieStore().removeAll();vault.clear();}
     synchronized void logout(){try{raw("POST","/auth/logout",null);}catch(Exception ignored){}clear();}
     synchronized List<HttpCookie> webCookies(){return new ArrayList<>(cookies.getCookieStore().getCookies());}
     JSONObject request(String method,String path,JSONObject body)throws Exception{
@@ -67,7 +70,7 @@ final class Api {
         try{if(connection.getResponseCode()==200){JSONArray releases=new JSONArray(read(connection.getInputStream(),4*1024*1024));long downloads=0;for(int i=0;i<releases.length();i++){JSONArray assets=releases.getJSONObject(i).optJSONArray("assets");if(assets!=null)for(int j=0;j<assets.length();j++){JSONObject asset=assets.getJSONObject(j);if(asset.optString("name").endsWith(".apk"))downloads+=asset.optLong("download_count");}}result.put("downloads",downloads);}}catch(Exception ignored){}finally{connection.disconnect();}return result;
     }
 
-    synchronized void refreshIdentity()throws Exception{me=Core.publicUser(request("GET","/users/me",null));}
+    synchronized void refreshIdentity()throws Exception{rememberIdentity(Core.publicUser(request("GET","/users/me",null)));}
     synchronized void changePassword(String current,String next,String expectedAccount)throws Exception{
         if(me==null||!expectedAccount.equals(me.optString("uuid")))throw new Failure(409,"Аккаунт изменён.");
         JSONObject body=new JSONObject().put("new_password",next);if(me.optBoolean("has_password",true))body.put("password",current);
@@ -79,6 +82,7 @@ final class Api {
         raw("POST","/auth/connect",new JSONObject().put("id_token",token));
         JSONObject identity=Core.publicUser(raw("GET","/users/me",null));
         if(!expectedAccount.equals(identity.optString("uuid"))){clear();throw new Failure(409,"Аккаунт изменён.");}me=identity;
+        rememberIdentity(identity);
     }
     void telemetry(String client)throws Exception{
         String cookieHeader="",token;synchronized(this){Map<String,List<String>> values=cookies.get(URI.create(Core.API+"/users/me"),Collections.emptyMap());for(Map.Entry<String,List<String>> value:values.entrySet())if(value.getKey().equalsIgnoreCase("Cookie"))cookieHeader=String.join("; ",value.getValue());token=bearer;}
