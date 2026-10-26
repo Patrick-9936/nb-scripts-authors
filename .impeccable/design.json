@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T17:00:00Z",
+  "title": "Design System: Script Library",
+  "extensions": {
+    "colorMeta": {
+      "light-accent": {"role":"primary","displayName":"Signal Indigo","canonical":"#4056D9","tonalRamp":["#10183F","#1D2A70","#2C3E9F","#4056D9","#7182EA","#9EAAEF","#CBD2F7","#F0F2FF"]},
+      "dark-accent": {"role":"primary","displayName":"Mist Violet","canonical":"#9EAFFF","tonalRamp":["#171C45","#28336A","#435397","#697CCB","#9EAFFF","#BCC7FF","#DCE2FF","#F4F6FF"]},
+      "light-ground": {"role":"neutral","displayName":"Cloud Ground","canonical":"#EDF2FF","tonalRamp":["#151923","#2C3342","#48536A","#687792","#91A0B9","#BBC5D6","#DCE3EF","#F5F8FF"]},
+      "dark-ground": {"role":"neutral","displayName":"Midnight Ground","canonical":"#090D16","tonalRamp":["#090D16","#151B28","#273044","#414D66","#66738D","#929DB1","#C6CCD7","#F4F6FA"]}
+    },
+    "typographyMeta": {
+      "headline": {"displayName":"Screen Headline","purpose":"Primary screen and section titles."},
+      "body": {"displayName":"Interface Body","purpose":"Descriptions, forms, and help."},
+      "label": {"displayName":"Metadata Label","purpose":"Dates, UUIDs, status, and counts."}
+    },
+    "shadows": [
+      {"name":"floating-navigation","value":"8dp system elevation","purpose":"Bottom navigation above scrolling content."},
+      {"name":"modal-blur","value":"22-26dp background blur on Android 12+","purpose":"Separate modal and sheet layers from live content."}
+    ],
+    "motion": [
+      {"name":"enter","value":"220ms decelerate","purpose":"Bring a new sheet or content surface into place."},
+      {"name":"sheet-settle","value":"180ms decelerate","purpose":"Return a partially dragged sheet to rest."}
+    ],
+    "breakpoints": [
+      {"name":"compact-phone","value":"default Android compact width"},
+      {"name":"wide-picker","value":"480dp; four brawler columns"}
+    ]
+  },
+  "components": [
+    {"name":"Primary Button","kind":"button","description":"Accent-filled 48dp action with a 16dp radius and optional leading icon."},
+    {"name":"Secondary Button","kind":"button","description":"Translucent tonal action with ink label and accent icon."},
+    {"name":"Script Card","kind":"card","description":"Dense 22dp surface for title, author, description, metadata, and quick actions."},
+    {"name":"Bottom Navigation","kind":"nav","description":"Four fixed destinations with tonal selection and icon plus label."},
+    {"name":"Draggable Sheet","kind":"custom","description":"A 30dp glass layer with drag handle, scrollable body, and optional pinned action."},
+    {"name":"Themed Modal","kind":"custom","description":"A centered glass decision or error surface with explicit recovery actions."}
+  ],
+  "narrative": {
+    "northStar": "The Liquid Library",
+    "overview": "Familiar Android structure gains quiet depth through cool grounds, translucent tonal surfaces, and restrained violet accents. Glass is functional: it marks a floating layer while content remains dense and readable.",
+    "keyCharacteristics": ["Cool authored light and dark themes","Translucent tonal surfaces","Dense lists with 48dp controls","Draggable bottom sheets","One accent family"],
+    "rules": [
+      {"name":"The One Signal Rule","body":"Accent identifies action or selection and does not tint ordinary cards.","section":"colors"},
+      {"name":"The Earned Glass Rule","body":"Blur belongs only to floating layers with a clear foreground and background.","section":"elevation"},
+      {"name":"The Code Exception Rule","body":"Monospace is reserved for Lua, UUIDs, and exact data.","section":"typography"}
+    ],
+    "dos": ["Show cached content immediately while refreshing","Keep battle launch above long parameter lists","Use shared icons and 48dp touch targets"],
+    "donts": ["Use platform-default AlertDialog styling","Stack duplicate sheets","Place decorative glass behind code","Hide recovery actions in generic errors"]
+  }
+}
