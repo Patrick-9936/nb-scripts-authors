@@ -212,6 +212,7 @@
   "Слишком много запросов. Попробуйте позже.": "Zu viele Anfragen. Versuchen Sie es später.",
   "Сервис ответил HTTP ": "Der Dienst reagierte auf HTTP ",
   "У автора нет Null’s Connect — запуск недоступен.": "Der Autor hat nicht Null’s Connect – Start ist nicht verfügbar.",
+  "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.": "Dieses Skript kann nicht in einem Kampf verwendet werden, weil sein Autor nicht verifiziert ist.",
   "Сервис отклонил запрос. Проверьте параметры и права аккаунта.": "Der Service verweigerte die Anfrage. Überprüfen Sie Ihre Kontoparameter und Rechte.",
   "Файл превышает допустимый размер": "Die Datei überschreitet die zulässige Größe",
   "Список авторов временно недоступен": "Liste der Autoren nicht verfügbar",

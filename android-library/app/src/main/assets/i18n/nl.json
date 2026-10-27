@@ -212,6 +212,7 @@
   "Слишком много запросов. Попробуйте позже.": "Te veel verzoeken. Probeer het later maar.",
   "Сервис ответил HTTP ": "De dienst reageerde op HTTP ",
   "У автора нет Null’s Connect — запуск недоступен.": "De auteur heeft niet de lancering van Null.",
+  "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.": "Dit script kan niet in een gevecht worden gebruikt omdat de auteur niet is geverifieerd.",
   "Сервис отклонил запрос. Проверьте параметры и права аккаунта.": "De dienst weigerde het verzoek. Controleer uw account parameters en rechten.",
   "Файл превышает допустимый размер": "Het bestand overschrijdt de toegestane grootte",
   "Список авторов временно недоступен": "Lijst van auteurs tijdelijk niet beschikbaar",

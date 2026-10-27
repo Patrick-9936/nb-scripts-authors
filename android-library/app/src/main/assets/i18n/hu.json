@@ -212,6 +212,7 @@
   "Слишком много запросов. Попробуйте позже.": "Túl sok kérés. Próbáld meg később.",
   "Сервис ответил HTTP ": "A szolgáltatás válaszolt HTTP ",
   "У автора нет Null’s Connect — запуск недоступен.": "A szerző nincs Null Connect - indítás nem áll rendelkezésre.",
+  "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.": "Ez a szkript nem használható csatában, mert a szerzője nincs ellenőrizve.",
   "Сервис отклонил запрос. Проверьте параметры и права аккаунта.": "A szolgálat megtagadta a kérést. Ellenőrizze a számla paramétereit és jogait.",
   "Файл превышает допустимый размер": "A fájl meghaladja a megengedett méretet",
   "Список авторов временно недоступен": "A szerzők listája ideiglenesen nem áll rendelkezésre",
