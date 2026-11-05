@@ -93,9 +93,13 @@ export async function run(argv) {
     process.stdout.write(`${VERSION}\n`);
     return 0;
   }
-  if (!name || flags.help || flags.h) {
+  if (flags.help || flags.h) {
     process.stdout.write(HELP);
-    return name ? 0 : 1;
+    return 0;
+  }
+  if (!name) {
+    process.stdout.write(HELP);
+    return 1;
   }
   const handler = COMMANDS[name];
   if (!handler) {

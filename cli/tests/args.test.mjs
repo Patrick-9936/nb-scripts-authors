@@ -30,3 +30,17 @@ test("coercion helpers behave", () => {
   assert.equal(asNumber("5", 1), 5);
   assert.equal(asNumber("nope", 1), 1);
 });
+
+test("--help and --version succeed, a missing command is a usage error", async () => {
+  const { run } = await import("../src/cli.mjs");
+  const quiet = async argv => {
+    const write = process.stdout.write;
+    process.stdout.write = () => true;
+    try { return await run(argv); } finally { process.stdout.write = write; }
+  };
+  assert.equal(await quiet(["--help"]), 0);
+  assert.equal(await quiet(["-h"]), 0);
+  assert.equal(await quiet(["--version"]), 0);
+  assert.equal(await quiet([]), 1);
+  assert.equal(await quiet(["nope"]), 2);
+});
