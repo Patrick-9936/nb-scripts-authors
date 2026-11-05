@@ -417,8 +417,7 @@ public final class MainActivity extends Activity {
     }
     private void authorRegistrySheet(JSONObject data){
         LinearLayout content=column();
-        JSONArray authors=data.optJSONArray("authors");
-        if(authors==null)authors=new JSONArray();
+        final JSONArray authors=data.optJSONArray("authors")!=null?data.optJSONArray("authors"):new JSONArray();
         content.addView(text(tr("Авторы скриптов")+" · "+authors.length(),20,INK));
         content.addView(label(tr("Список читают приложение и сайт. Изменения применяются после обновления каталога.")));
         EditText entry=input(tr("Ссылка на профиль или @имя"),false);
@@ -476,8 +475,23 @@ public final class MainActivity extends Activity {
     private void mutateAuthor(Work action,Runnable refresh){
         work(tr("Сохраняю…"),action,()->reloadAuthors(null,refresh));
     }
+    /** Re-reads the registry and refreshes the open sheet in place. */
     private void reloadAuthors(JSONArray authors,Runnable refresh){
-        worker.execute(()->{try{JSONObject data=api.authors();ui.post(()->{if(!alive())return;JSONArray next=data.optJSONArray("authors");if(next==null)next=new JSONArray();if(authors!=null){while(authors.length()>0)authors.remove(0);for(int i=0;i<next.length();i++)authors.put(next.getJSONObject(i));}if(refresh!=null)refresh.run();notice(tr("Список авторов обновлён"));});}catch(Exception error){ui.post(()->{if(alive())error(error);});}});
+        worker.execute(()->{
+            JSONObject data;
+            try{data=api.authors();}catch(Exception error){ui.post(()->{if(alive())error(error);});return;}
+            ui.post(()->{
+                if(!alive())return;
+                JSONArray next=data.optJSONArray("authors");
+                if(next==null)next=new JSONArray();
+                if(authors!=null){
+                    while(authors.length()>0)authors.remove(0);
+                    for(int i=0;i<next.length();i++){JSONObject item=next.optJSONObject(i);if(item!=null)authors.put(item);}
+                }
+                if(refresh!=null)refresh.run();
+                notice(tr("Список авторов обновлён"));
+            });
+        });
     }
     private void statistics(){if(!requireLogin())return;final String owner=api.identity().optString("uuid");work(tr("Загрузка…"),()->{JSONObject data=api.statistics();ui.post(()->{if(!alive()||api.identity()==null||!owner.equals(api.identity().optString("uuid")))return;LinearLayout content=column();JSONObject installs=data.optJSONObject("installs");if(installs==null)installs=new JSONObject();statisticValue(content,"Скачивания APK (GitHub)",data.isNull("downloads")?"—":String.valueOf(data.optLong("downloads")));statisticValue(content,"Пользователи приложения",String.valueOf(installs.optLong("android")));statisticValue(content,"Пользователи сайта",String.valueOf(installs.optLong("web")));statisticValue(content,"Вошедшие аккаунты",String.valueOf(data.optLong("accounts")));content.addView(label(tr("Вошедшие пользователи учитываются по аккаунту. Без входа учитывается устройство или браузер.")));for(String kind:new String[]{"active","logins"}){JSONArray rows=data.optJSONArray(kind);if(rows==null)continue;for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row==null)continue;String title=kind.equals("active")?(row.optString("platform").equals("web")?"Сайт":"Приложение"):(row.optString("platform").equals("web")?"Вход на сайте":"Вход в приложении");LinearLayout card=panel();card.addView(text(tr(title),18,INK));card.addView(label(tr("Сегодня")+": "+row.optLong("today")));card.addView(label("7 "+tr("дней")+": "+row.optLong("week")));card.addView(label("30 "+tr("дней")+": "+row.optLong("month")));LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(-1,-2);space.topMargin=dp(10);content.addView(card,space);}}sheet(tr("Статистика"),content);});},null);}
     private void account(){
