@@ -1,4 +1,5 @@
 package gg.nulls.library;
+import android.util.Base64;
 import org.json.*;
 import java.net.*;
 import java.io.*;
@@ -65,12 +66,36 @@ final class Api {
         HttpURLConnection connection=(HttpURLConnection)new URL("https://esmqzozbwufdixcxgtts.supabase.co/functions/v1/settings-sync").openConnection();connection.setConnectTimeout(10000);connection.setReadTimeout(25000);connection.setInstanceFollowRedirects(false);connection.setRequestMethod("POST");connection.setRequestProperty("Content-Type","application/json");connection.setRequestProperty("x-nulls-cookie",cookieHeader);connection.setRequestProperty("x-nulls-bearer",token);connection.setDoOutput(true);
         try{byte[] data=body.toString().getBytes(StandardCharsets.UTF_8);connection.setFixedLengthStreamingMode(data.length);try(OutputStream out=connection.getOutputStream()){out.write(data);}int status=connection.getResponseCode();if(status<200||status>=300)throw new Failure(status,"Синхронизация недоступна. Настройки сохранены на устройстве.");return new JSONObject(read(connection.getInputStream(),1024*1024));}finally{connection.disconnect();}
     }
+    /** Session token for the project proxy, which validates it against Null's itself. */
+    private String proxySession()throws Exception{
+        String cookieHeader="",token;synchronized(this){Map<String,List<String>> values=cookies.get(URI.create(Core.API+"/users/me"),Collections.emptyMap());for(Map.Entry<String,List<String>> value:values.entrySet())if(value.getKey().equalsIgnoreCase("Cookie"))cookieHeader=String.join("; ",value.getValue());token=bearer;}
+        JSONObject session=new JSONObject().put("cookies",new JSONObject()).put("bearer",token).put("expires",System.currentTimeMillis()+600000);
+        if(!cookieHeader.isEmpty()){JSONObject jar=new JSONObject();for(String pair:cookieHeader.split("; ")){int split=pair.indexOf('=');if(split>0)jar.put(pair.substring(0,split),pair.substring(split+1));}session.put("cookies",jar);}
+        return Base64.encodeToString(session.toString().getBytes(StandardCharsets.UTF_8),Base64.URL_SAFE|Base64.NO_WRAP|Base64.NO_PADDING);
+    }
+    private JSONObject proxy(String method,String path,JSONObject body)throws Exception{
+        HttpURLConnection connection=(HttpURLConnection)new URL(Core.PROXY+path).openConnection();
+        connection.setConnectTimeout(15000);connection.setReadTimeout(25000);connection.setInstanceFollowRedirects(false);connection.setRequestMethod(method);
+        connection.setRequestProperty("Accept","application/json");connection.setRequestProperty("x-script-library-session",proxySession());
+        try{
+            if(body!=null){connection.setRequestProperty("Content-Type","application/json");byte[] data=body.toString().getBytes(StandardCharsets.UTF_8);connection.setDoOutput(true);connection.setFixedLengthStreamingMode(data.length);try(OutputStream out=connection.getOutputStream()){out.write(data);}}
+            int status=connection.getResponseCode();String text=read(status>=400?connection.getErrorStream():connection.getInputStream(),2*1024*1024);
+            JSONObject value=text.trim().isEmpty()?new JSONObject():new JSONObject(text);
+            if(status<200||status>=300)throw new Failure(status,value.optString("error",status==403?"Недостаточно прав.":"Сервис недоступен."));
+            return value;
+        }finally{connection.disconnect();}
+    }
+    JSONObject permissions()throws Exception{return proxy("POST","/library/permissions",new JSONObject());}
+    JSONObject authors()throws Exception{return proxy("GET","/library/authors",null);}
+    JSONObject addAuthor(String url)throws Exception{return proxy("POST","/library/authors",new JSONObject().put("url",url));}
+    JSONObject updateAuthor(String target,String url)throws Exception{return proxy("PUT","/library/authors",new JSONObject().put("target",target).put("url",url));}
+    JSONObject removeAuthor(String target)throws Exception{return proxy("DELETE","/library/authors",new JSONObject().put("target",target));}
     JSONObject statistics()throws Exception{
-        JSONObject identity=identity();if(identity==null)throw new Failure(401,"Требуется вход.");JSONObject result;
-        try{result=sync(new JSONObject().put("op","stats"),identity.getString("uuid"));}catch(Failure error){if(error.status==403)throw new Failure(403,"Недостаточно прав.");throw error;}
-        result.put("downloads",JSONObject.NULL);
-        HttpURLConnection connection=(HttpURLConnection)new URL("https://api.github.com/repos/Patrick-9936/nb-scripts-authors/releases?per_page=100").openConnection();connection.setConnectTimeout(5000);connection.setReadTimeout(5000);connection.setRequestProperty("Accept","application/vnd.github+json");connection.setRequestProperty("User-Agent","Script-Library");
-        try{if(connection.getResponseCode()==200){JSONArray releases=new JSONArray(read(connection.getInputStream(),4*1024*1024));long downloads=0;for(int i=0;i<releases.length();i++){JSONArray assets=releases.getJSONObject(i).optJSONArray("assets");if(assets!=null)for(int j=0;j<assets.length();j++){JSONObject asset=assets.getJSONObject(j);if(asset.optString("name").endsWith(".apk"))downloads+=asset.optLong("download_count");}}result.put("downloads",downloads);}}catch(Exception ignored){}finally{connection.disconnect();}return result;
+        JSONObject identity=identity();if(identity==null)throw new Failure(401,"Требуется вход.");
+        // The project proxy owns the counters and checks the owner account itself.
+        JSONObject result=proxy("POST","/library/stats",new JSONObject());
+        if(!result.has("downloads"))result.put("downloads",JSONObject.NULL);
+        return result;
     }
 
     synchronized void refreshIdentity()throws Exception{rememberIdentity(Core.publicUser(request("GET","/users/me",null)));}

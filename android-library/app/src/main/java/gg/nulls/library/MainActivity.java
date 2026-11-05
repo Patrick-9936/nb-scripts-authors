@@ -49,7 +49,7 @@ public final class MainActivity extends Activity {
     private String query="";
     private long seed=new Random().nextLong();
     private long accountGeneration=0;
-    private boolean refreshing=false,restoring=false,statsAllowed=false,extrasBusy=false;
+    private boolean refreshing=false,restoring=false,statsAllowed=false,ownerAllowed=false,extrasBusy=false;
     private String permissionOwner="";private long permissionsFetched=0;
     private final Set<String> quickFavorites=new HashSet<>();
     private List<JSONObject> own=new ArrayList<>(),ownMaps=new ArrayList<>();
@@ -405,9 +405,80 @@ public final class MainActivity extends Activity {
     private void loadOwn(){if(!requireLogin())return;work(tr("Загружаю ваши скрипты…"),()->own=repo.own(),()->{if(screen==3)render();});}
     private void loadOwnQuietly(){if(!api.authenticated())return;long generation=accountGeneration;worker.execute(()->{try{List<JSONObject> loaded=repo.own();ui.post(()->{if(!alive()||generation!=accountGeneration||!api.authenticated())return;own=loaded;if(screen==3||screen==4)render();});}catch(Exception ignored){/* Cached scripts remain visible. */}});}
     private void statisticValue(LinearLayout parent,String title,String value){LinearLayout card=panel();card.addView(label(tr(title)));TextView number=text(value,28,INK);number.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));card.addView(number);LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(-1,-2);space.topMargin=dp(10);parent.addView(card,space);}
-    private void loadAccountExtras(){if(!api.authenticated()){statsAllowed=false;permissionOwner="";quickFavorites.clear();permissionsFetched=0;return;}String owner=api.identity().optString("uuid");if(extrasBusy||(owner.equals(permissionOwner)&&System.currentTimeMillis()-permissionsFetched<60000))return;extrasBusy=true;worker.execute(()->{boolean allowed=false;Set<String> favorites=new HashSet<>();try{JSONObject result=api.sync(new JSONObject().put("op","permissions"),owner);if(owner.equals(result.optString("user_uuid"))){JSONObject permissions=result.optJSONObject("permissions");allowed=permissions!=null&&permissions.optBoolean("view_statistics");}}catch(Exception ignored){}try{JSONArray items=api.request("GET","/users/"+owner+"/favorites",null).optJSONArray("scripts");if(items!=null)for(int i=0;i<items.length();i++)favorites.add(items.getJSONObject(i).optString("uuid"));}catch(Exception ignored){}final boolean permission=allowed;ui.post(()->{extrasBusy=false;if(!alive()||!api.authenticated()||!owner.equals(api.identity().optString("uuid")))return;statsAllowed=permission;permissionOwner=owner;permissionsFetched=System.currentTimeMillis();quickFavorites.clear();quickFavorites.addAll(favorites);if(screen==4)render();else if(adapter!=null)adapter.notifyDataSetChanged();});});}
+    private void loadAccountExtras(){if(!api.authenticated()){statsAllowed=false;ownerAllowed=false;permissionOwner="";quickFavorites.clear();permissionsFetched=0;return;}String owner=api.identity().optString("uuid");if(extrasBusy||(owner.equals(permissionOwner)&&System.currentTimeMillis()-permissionsFetched<60000))return;extrasBusy=true;worker.execute(()->{boolean allowed=false,ownerAccount=false;Set<String> favorites=new HashSet<>();try{JSONObject result=api.permissions();if(owner.equals(result.optString("user_uuid"))){JSONObject permissions=result.optJSONObject("permissions");allowed=permissions!=null&&permissions.optBoolean("view_statistics");ownerAccount=result.optBoolean("owner");}}catch(Exception ignored){}try{JSONArray items=api.request("GET","/users/"+owner+"/favorites",null).optJSONArray("scripts");if(items!=null)for(int i=0;i<items.length();i++)favorites.add(items.getJSONObject(i).optString("uuid"));}catch(Exception ignored){}final boolean permission=allowed,ownerFlag=ownerAccount;ui.post(()->{extrasBusy=false;if(!alive()||!api.authenticated()||!owner.equals(api.identity().optString("uuid")))return;statsAllowed=permission;ownerAllowed=ownerFlag;permissionOwner=owner;permissionsFetched=System.currentTimeMillis();quickFavorites.clear();quickFavorites.addAll(favorites);if(screen==4)render();else if(adapter!=null)adapter.notifyDataSetChanged();});});}
     private LinearLayout scriptQuickActions(JSONObject script){LinearLayout actions=row();actions.setPadding(0,dp(12),0,0);String id=script.optString("uuid");ImageButton[] favorite=new ImageButton[1];favorite[0]=iconButton(R.drawable.nav_heart,"Добавить / убрать из избранного",()->toggleQuickFavorite(script,favorite[0]));favorite[0].setColorFilter(quickFavorites.contains(id)?ACCENT:MUTED);favorite[0].setFocusable(false);actions.addView(favorite[0],new LinearLayout.LayoutParams(dp(40),dp(40)));for(ImageButton button:new ImageButton[]{iconButton(R.drawable.nav_share,"Поделиться скриптом",()->share(Core.ORIGIN+"/scripts/"+id)),iconButton(R.drawable.nav_download,"Скачать .lua",()->{if(requireLogin())download(script);})}){LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(dp(40),dp(40));space.leftMargin=dp(8);button.setFocusable(false);actions.addView(button,space);}return actions;}
     private void toggleQuickFavorite(JSONObject script,ImageButton button){if(!requireLogin())return;String owner=api.identity().optString("uuid"),id=script.optString("uuid");button.setEnabled(false);worker.execute(()->{try{String path="/users/"+owner+"/favorites";JSONArray favorites=api.request("GET",path,null).getJSONArray("scripts");boolean exists=false;for(int i=0;i<favorites.length();i++)if(id.equals(Core.publicScript(favorites.getJSONObject(i)).optString("uuid")))exists=true;if(!api.authenticated()||!owner.equals(api.identity().optString("uuid")))return;api.request(exists?"DELETE":"POST",path,new JSONObject().put("script_id",id));final boolean removed=exists;ui.post(()->{if(!alive()||!api.authenticated()||!owner.equals(api.identity().optString("uuid")))return;if(removed)quickFavorites.remove(id);else quickFavorites.add(id);button.setColorFilter(removed?MUTED:ACCENT);if(adapter!=null)adapter.notifyDataSetChanged();notice(removed?"Удалено из избранного":"Добавлено в избранное");});}catch(Exception error){ui.post(()->error(error));}finally{ui.post(()->button.setEnabled(true));}});}
+    private void manageAuthors(){
+        if(!requireLogin())return;
+        work(tr("Загрузка…"),()->{
+            JSONObject data=api.authors();
+            ui.post(()->{if(alive())authorRegistrySheet(data);});
+        },null);
+    }
+    private void authorRegistrySheet(JSONObject data){
+        LinearLayout content=column();
+        JSONArray authors=data.optJSONArray("authors");
+        if(authors==null)authors=new JSONArray();
+        content.addView(text(tr("Авторы скриптов")+" · "+authors.length(),20,INK));
+        content.addView(label(tr("Список читают приложение и сайт. Изменения применяются после обновления каталога.")));
+        EditText entry=input(tr("Ссылка на профиль или @имя"),false);
+        content.addView(entry);
+        Button add=primary(tr("Добавить автора"),()->{});
+        addButton(content,add);
+        LinearLayout list=column();
+        content.addView(list);
+        Runnable[] render=new Runnable[1];
+        render[0]=()->{
+            list.removeAllViews();
+            for(int i=0;i<authors.length();i++){
+                JSONObject author=authors.optJSONObject(i);
+                if(author==null)continue;
+                LinearLayout card=panel();
+                String name=author.optString("name"),handle=author.optString("username"),url=author.optString("url");
+                card.addView(text(name.isEmpty()?url:name,17,INK));
+                if(!handle.isEmpty())card.addView(label("@"+handle));
+                TextView link=text(url,12,MUTED);link.setTextIsSelectable(true);link.setPadding(0,dp(6),0,0);card.addView(link);
+                LinearLayout actions=row();actions.setPadding(0,dp(12),0,0);
+                ImageButton edit=iconButton(R.drawable.nav_edit,tr("Изменить"),()->editAuthorDialog(authors,author,render[0]));
+                ImageButton remove=iconButton(R.drawable.nav_trash,tr("Удалить"),()->confirm(tr("Удалить автора?"),url,tr("Удалить"),true,()->mutateAuthor(()->api.removeAuthor(url),render[0])));
+                actions.addView(edit,new LinearLayout.LayoutParams(dp(44),dp(44)));
+                LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(dp(44),dp(44));space.leftMargin=dp(8);actions.addView(remove,space);
+                card.addView(actions);
+                LinearLayout.LayoutParams gap=new LinearLayout.LayoutParams(-1,-2);gap.topMargin=dp(10);list.addView(card,gap);
+            }
+            if(authors.length()==0)list.addView(label(tr("Список пуст")));
+        };
+        render[0].run();
+        add.setOnClickListener(v->{
+            String value=entry.getText().toString().trim();
+            if(value.isEmpty()){entry.setError(tr("Введите ссылку или @имя"));return;}
+            add.setEnabled(false);
+            work(tr("Сохраняю…"),()->{try{api.addAuthor(value);}finally{ui.post(()->add.setEnabled(true));}},()->{entry.setText("");reloadAuthors(authors,render[0]);});
+        });
+        sheet(tr("Управление авторами"),content);
+    }
+    private void editAuthorDialog(JSONArray authors,JSONObject author,Runnable refresh){
+        LinearLayout content=column();
+        EditText value=input(tr("Ссылка на профиль или @имя"),false);
+        value.setText(author.optString("url"));
+        content.addView(label(tr("НОВАЯ ССЫЛКА")));
+        content.addView(value);
+        Button save=primary(tr("Сохранить"),()->{});
+        addButton(content,save);
+        Dialog dialog=roundedForm("Изменить автора",content);
+        save.setOnClickListener(v->{
+            String next=value.getText().toString().trim();
+            if(next.isEmpty()){value.setError(tr("Введите ссылку или @имя"));return;}
+            save.setEnabled(false);
+            work(tr("Сохраняю…"),()->{try{api.updateAuthor(author.optString("url"),next);}finally{ui.post(()->save.setEnabled(true));}},()->{dialog.dismiss();reloadAuthors(authors,refresh);});
+        });
+    }
+    private void mutateAuthor(Work action,Runnable refresh){
+        work(tr("Сохраняю…"),action,()->reloadAuthors(null,refresh));
+    }
+    private void reloadAuthors(JSONArray authors,Runnable refresh){
+        worker.execute(()->{try{JSONObject data=api.authors();ui.post(()->{if(!alive())return;JSONArray next=data.optJSONArray("authors");if(next==null)next=new JSONArray();if(authors!=null){while(authors.length()>0)authors.remove(0);for(int i=0;i<next.length();i++)authors.put(next.getJSONObject(i));}if(refresh!=null)refresh.run();notice(tr("Список авторов обновлён"));});}catch(Exception error){ui.post(()->{if(alive())error(error);});}});
+    }
     private void statistics(){if(!requireLogin())return;final String owner=api.identity().optString("uuid");work(tr("Загрузка…"),()->{JSONObject data=api.statistics();ui.post(()->{if(!alive()||api.identity()==null||!owner.equals(api.identity().optString("uuid")))return;LinearLayout content=column();JSONObject installs=data.optJSONObject("installs");if(installs==null)installs=new JSONObject();statisticValue(content,"Скачивания APK (GitHub)",data.isNull("downloads")?"—":String.valueOf(data.optLong("downloads")));statisticValue(content,"Пользователи приложения",String.valueOf(installs.optLong("android")));statisticValue(content,"Пользователи сайта",String.valueOf(installs.optLong("web")));statisticValue(content,"Вошедшие аккаунты",String.valueOf(data.optLong("accounts")));content.addView(label(tr("Вошедшие пользователи учитываются по аккаунту. Без входа учитывается устройство или браузер.")));for(String kind:new String[]{"active","logins"}){JSONArray rows=data.optJSONArray(kind);if(rows==null)continue;for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row==null)continue;String title=kind.equals("active")?(row.optString("platform").equals("web")?"Сайт":"Приложение"):(row.optString("platform").equals("web")?"Вход на сайте":"Вход в приложении");LinearLayout card=panel();card.addView(text(tr(title),18,INK));card.addView(label(tr("Сегодня")+": "+row.optLong("today")));card.addView(label("7 "+tr("дней")+": "+row.optLong("week")));card.addView(label("30 "+tr("дней")+": "+row.optLong("month")));LinearLayout.LayoutParams space=new LinearLayout.LayoutParams(-1,-2);space.topMargin=dp(10);content.addView(card,space);}}sheet(tr("Статистика"),content);});},null);}
     private void account(){
         LinearLayout c=column();
@@ -422,6 +493,7 @@ public final class MainActivity extends Activity {
             addButton(accountPanel,button(tr("Мои скрипты"),()->{screen=3;render();if(api.authenticated())loadOwnQuietly();}));
             if(api.authenticated()){addButton(accountPanel,button(tr("Избранное"),this::favorites));
             if(statsAllowed&&permissionOwner.equals(me.optString("uuid")))addButton(accountPanel,button(tr("Статистика"),this::statistics));
+            if(ownerAllowed&&permissionOwner.equals(me.optString("uuid")))addButton(accountPanel,button(tr("Управление авторами"),this::manageAuthors));
             addButton(accountPanel,button("Null’s Connect",this::connectSettings));
             addButton(accountPanel,button(tr("Настройки аккаунта"),this::accountSettings));
             addButton(accountPanel,button(tr("Выйти и очистить данные"),()->{repo.cancelIndex=true;accountGeneration++;work(tr("Выход…"),()->{api.logout();repo.clearAccount();},()->{accountSync.bind();own=new ArrayList<>();editedSincePublish.clear();publishedWithoutFurtherEdit.clear();getSharedPreferences("battle",MODE_PRIVATE).edit().clear().apply();getSharedPreferences("recent",0).edit().clear().apply();getSharedPreferences("incoming_draft",0).edit().clear().apply();info=tr("Вы вышли");accountSync.bind();render();refresh();});}));
@@ -435,7 +507,7 @@ public final class MainActivity extends Activity {
             accountPanel.addView(user);accountPanel.addView(password);
             Switch remember=liquidSwitch(tr("Запомнить вход"));accountPanel.addView(remember);
             Button login=primary(tr("Войти"),()->{});
-            login.setOnClickListener(v->{String u=user.getText().toString().trim(),pw=password.getText().toString();if(u.isEmpty()||pw.isEmpty()){notice("Введите имя и пароль");return;}login.setEnabled(false);boolean r=remember.isChecked();hideKeyboard();worker.execute(()->{try{JSONObject me=api.login(u,pw,r);repo.bindAccount(me.getString("uuid"));own=repo.cachedOwn(me.getString("uuid"));ui.post(()->{if(!alive())return;accountGeneration++;statsAllowed=false;permissionOwner="";quickFavorites.clear();accountSync.bind();loadAccountExtras();screen=0;setStatus(tr("Вход выполнен"));entryMotion.begin();render();refreshIfNeeded();loadOwnQuietly();resumeImportedDraft();Telemetry.record(this,api);});}catch(Exception e){ui.post(()->{if(!alive())return;login.setEnabled(true);error(e);});}});});
+            login.setOnClickListener(v->{String u=user.getText().toString().trim(),pw=password.getText().toString();if(u.isEmpty()||pw.isEmpty()){notice("Введите имя и пароль");return;}login.setEnabled(false);boolean r=remember.isChecked();hideKeyboard();worker.execute(()->{try{JSONObject me=api.login(u,pw,r);repo.bindAccount(me.getString("uuid"));own=repo.cachedOwn(me.getString("uuid"));ui.post(()->{if(!alive())return;accountGeneration++;statsAllowed=false;ownerAllowed=false;permissionOwner="";quickFavorites.clear();accountSync.bind();loadAccountExtras();screen=0;setStatus(tr("Вход выполнен"));entryMotion.begin();render();refreshIfNeeded();loadOwnQuietly();resumeImportedDraft();Telemetry.record(this,api);});}catch(Exception e){ui.post(()->{if(!alive())return;login.setEnabled(true);error(e);});}});});
             addButton(accountPanel,login);
             addButton(accountPanel,button("Null’s Connect",()->{hideKeyboard();connectAuthorize(true,remember.isChecked());}));
             addButton(accountPanel,button(tr("Создать аккаунт"),()->registrationDialog(null)));
@@ -457,7 +529,7 @@ public final class MainActivity extends Activity {
         Dialog dialog=sheet(tr("Настройки аккаунта"),c);Button save=primary(tr("Сохранить"),()->{});addButton(form,save);c.addView(form);
         save.setOnClickListener(v->{String old=current.getText().toString(),password=next.getText().toString();if(hasPassword&&old.isEmpty()){current.setError(tr("Введите имя и пароль"));return;}if(password.length()<8){next.setError(tr("Минимум 8 символов"));return;}if(!password.equals(repeat.getText().toString())){repeat.setError(tr("Пароли не совпадают"));return;}save.setEnabled(false);hideKeyboard();worker.execute(()->{try{api.changePassword(old,password,owner);ui.post(()->{if(!alive())return;current.setText("");next.setText("");repeat.setText("");dialog.dismiss();notice("Пароль изменён");});}catch(Exception error){ui.post(()->{save.setEnabled(true);error(error);});}});});
     }
-    private void completeSignIn(JSONObject me){try{repo.bindAccount(me.getString("uuid"));own=repo.cachedOwn(me.getString("uuid"));}catch(Exception e){error(e);return;}accountGeneration++;statsAllowed=false;permissionOwner="";quickFavorites.clear();accountSync.bind();loadAccountExtras();screen=0;setStatus(tr("Вход выполнен"));entryMotion.begin();render();refreshIfNeeded();loadOwnQuietly();resumeImportedDraft();Telemetry.record(this,api);}
+    private void completeSignIn(JSONObject me){try{repo.bindAccount(me.getString("uuid"));own=repo.cachedOwn(me.getString("uuid"));}catch(Exception e){error(e);return;}accountGeneration++;statsAllowed=false;ownerAllowed=false;permissionOwner="";quickFavorites.clear();accountSync.bind();loadAccountExtras();screen=0;setStatus(tr("Вход выполнен"));entryMotion.begin();render();refreshIfNeeded();loadOwnQuietly();resumeImportedDraft();Telemetry.record(this,api);}
     private void registrationDialog(String signup){registrationDialog(signup,false);}
     private void registrationDialog(String signup,boolean remembered){LinearLayout content=column();boolean connect=signup!=null;EditText name=input(tr("Имя"),false),user=input(tr("Имя пользователя"),false),password=input(tr("Пароль"),false),confirm=input(tr("Повторите пароль"),false);name.setAutofillHints(View.AUTOFILL_HINT_NAME);user.setAutofillHints(View.AUTOFILL_HINT_USERNAME);password.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);confirm.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);password.setAutofillHints("newPassword");content.addView(label(tr("Имя")));content.addView(name);content.addView(label(tr("Имя пользователя")));content.addView(user);if(!connect){content.addView(label(tr("Пароль")));content.addView(password);content.addView(label(tr("Повторите пароль")));content.addView(confirm);}else content.addView(label(tr("Null’s Connect подтверждён. Выберите имя и имя пользователя.")));Switch remember=liquidSwitch(tr("Запомнить вход"));remember.setChecked(remembered);content.addView(remember);TextView result=text("",13,ACCENT);result.setTextIsSelectable(true);content.addView(result);Button create=primary(tr("Создать аккаунт"),()->{});addButton(content,create);Dialog dialog=roundedForm("Создать аккаунт",content);create.setOnClickListener(v->{String n=name.getText().toString().trim(),u=user.getText().toString().trim(),pass=password.getText().toString();if(n.length()<(connect?1:3)||u.length()<(connect?1:3)||n.length()>128||u.length()>128||(!connect&&(pass.length()<8||pass.length()>512))){result.setText(tr(connect?"Введите имя и имя пользователя.":"Имя и имя пользователя: от 3 символов. Пароль: от 8 символов."));return;}if(!connect&&!pass.equals(confirm.getText().toString())){confirm.setError(tr("Пароли не совпадают"));return;}hideKeyboard();create.setEnabled(false);boolean save=remember.isChecked();result.setText(tr("Создаю аккаунт…"));worker.execute(()->{try{JSONObject me=connect?api.registerConnect(signup,n,u,save):api.register(n,u,pass,save);ui.post(()->{if(!alive())return;dialog.dismiss();completeSignIn(me);notice("Аккаунт создан");});}catch(Exception error){ui.post(()->{if(!alive()||!dialog.isShowing())return;create.setEnabled(true);result.setText(localizer.error(error));});}});});}
     private void connectSettings(){
