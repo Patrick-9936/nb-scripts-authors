@@ -98,7 +98,7 @@ final class Api {
         for(int attempt=1;;attempt++){
             try{return rawOnce(method,path,body);}
             catch(Failure error){
-                if(attempt>=ATTEMPTS||!transient(error.status))throw error;
+                if(attempt>=ATTEMPTS||!retryable(error.status))throw error;
                 pause=backoff(pause,attempt,error.retryAfter);
             }catch(java.net.SocketTimeoutException|java.net.ConnectException|java.net.NoRouteToHostException error){
                 if(attempt>=ATTEMPTS)throw error;
@@ -106,7 +106,7 @@ final class Api {
             }
         }
     }
-    private static boolean transient(int status){return status==429||status==502||status==503||status==504;}
+    private static boolean retryable(int status){return status==429||status==502||status==503||status==504;}
     private static long retryAfter(HttpURLConnection connection){try{String value=connection.getHeaderField("Retry-After");if(value==null)return 0;value=value.trim();if(value.matches("\\d{1,5}"))return Long.parseLong(value);java.time.ZonedDateTime when=java.time.ZonedDateTime.parse(value,java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);long seconds=java.time.Duration.between(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC),when.withZoneSameInstant(java.time.ZoneOffset.UTC)).getSeconds();return Math.max(0,Math.min(60,seconds));}catch(Exception ignored){return 0;}}
     private static long backoff(long previous,int attempt,long retryAfter){
         long wait=Math.min(BACKOFF_MAX,Math.max(previous*2,BACKOFF_BASE*(1L<<Math.min(attempt-1,4))));
@@ -140,7 +140,7 @@ final class Api {
                 int status=c.getResponseCode();
                 if(status==200)return read(c.getInputStream(),256*1024);
                 last=new IOException(status==429?"Слишком много запросов. Повторите позже.":"Список авторов временно недоступен");
-                if(!transient(status))throw last;
+                if(!retryable(status))throw last;
             }catch(java.net.SocketTimeoutException|java.net.ConnectException error){last=new IOException("Список авторов временно недоступен",error);}
             finally{c.disconnect();}
             if(attempt<ATTEMPTS)backoff(0,attempt,0);
