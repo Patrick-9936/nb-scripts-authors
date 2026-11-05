@@ -274,8 +274,9 @@ public final class MainActivity extends Activity {
     private void rememberScript(JSONObject item){try{JSONArray old=new JSONArray(getSharedPreferences("recent",0).getString("items","[]")),next=new JSONArray();JSONObject entry=new JSONObject(item.toString()).put("viewed_at",Instant.now().toString());next.put(entry);for(int i=0;i<old.length()&&next.length()<50;i++){JSONObject prior=old.optJSONObject(i);if(prior!=null&&!item.optString("uuid").equals(prior.optString("uuid")))next.put(prior);}getSharedPreferences("recent",0).edit().putString("items",next.toString()).apply();}catch(Exception ignored){}}
     private void recentScripts(){
         LinearLayout content=column(),itemsView=column();Dialog[] dialog=new Dialog[1];
-        JSONArray items=new JSONArray();
-        try{items=new JSONArray(getSharedPreferences("recent",0).getString("items","[]"));}catch(Exception ignored){}
+        JSONArray loaded=new JSONArray();
+        try{loaded=new JSONArray(getSharedPreferences("recent",0).getString("items","[]"));}catch(Exception ignored){}
+        final JSONArray items=loaded;
         addButton(content,button(tr("Очистить историю"),()->{getSharedPreferences("recent",0).edit().clear().apply();if(dialog[0]!=null)dialog[0].dismiss();recentScripts();}));
         EditText searchField=input(tr("Поиск по названию, автору или UUID"),false);
         content.addView(searchField);
