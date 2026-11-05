@@ -4,6 +4,11 @@
 
 The Android source is in [`android-library/`](android-library/). Its build instructions and release requirements are in [`android-library/README.md`](android-library/README.md). The web source is maintained separately in a private repository; the public Pages repository contains the built site.
 
+The command line client lives in [`cli/`](cli/). It browses the same catalog, shows
+and downloads code, configures a battle and builds the same `nullsbrawl://` link as
+the app. Install it with `npm install -g script-library-cli`; it runs on Windows,
+Linux and macOS on Node 18 or newer.
+
 APK builds run in [Actions](https://github.com/Patrick-9936/nb-scripts-authors/actions). Signed installable APKs are published in [Releases](https://github.com/Patrick-9936/nb-scripts-authors/releases). Build artifacts are not committed to this repository.
 
 ## Project proxy

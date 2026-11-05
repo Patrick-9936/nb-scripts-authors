@@ -6,3 +6,5 @@ site*.html
 nulls-home.html
 android-library/ci/__pycache__/
 contract-report.md
+cli/*.tgz
+cli/node_modules/

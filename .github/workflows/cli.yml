@@ -1,0 +1,85 @@
+name: CLI
+
+# The CLI is published to npm, so its tests and the packed tarball are checked on
+# every change. Publishing runs only for a cli-v* tag and needs NPM_TOKEN.
+on:
+  push:
+    paths: ['cli/**', '.github/workflows/cli.yml']
+    tags: ['cli-v*']
+  pull_request:
+    paths: ['cli/**', '.github/workflows/cli.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cli-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Tests
+        working-directory: cli
+        run: npm test
+      - name: Help and version run
+        working-directory: cli
+        run: |
+          node bin/script-library.mjs --version
+          node bin/script-library.mjs --help > /dev/null
+      - name: Package installs and runs
+        working-directory: cli
+        run: |
+          set -euo pipefail
+          npm pack
+          tarball=$(ls script-library-cli-*.tgz)
+          mkdir -p "$RUNNER_TEMP/install" && cd "$RUNNER_TEMP/install"
+          npm init -y > /dev/null
+          npm install --no-fund --no-audit "$GITHUB_WORKSPACE/cli/$tarball"
+          ./node_modules/.bin/script-library --version
+          ./node_modules/.bin/sl --version
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/cli-v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Check the tag matches the package version
+        working-directory: cli
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          if [ "cli-v$version" != "$TAG" ]; then
+            echo "::error::Тег $TAG не совпадает с версией $version в package.json"
+            exit 1
+          fi
+      - name: Publish
+        working-directory: cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Добавьте секрет NPM_TOKEN с правом публикации"
+            exit 1
+          fi
+          npm publish --access public --provenance
