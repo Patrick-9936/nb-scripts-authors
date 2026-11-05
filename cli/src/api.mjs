@@ -174,7 +174,7 @@ function message(status, body, path) {
   if (lower.includes("author is not verified") || lower.includes("author not verified") || lower.includes("author does not have connect")) {
     return "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.";
   }
-  if (status === 401) return "Сессия завершена. Войдите снова.";
+  if (status === 401) return path === "/auth/login" ? "Неверное имя пользователя или пароль." : "Сессия завершена. Войдите снова.";
   if (status === 403) return "Аккаунту недоступно это действие.";
   if (status === 404) return "Скрипт или автор не найден.";
   if (status === 429) return "Сервис ограничил частоту запросов. Повторите через минуту.";
