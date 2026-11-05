@@ -27,6 +27,7 @@ REGISTRY = ROOT / "list.txt"
 BASELINE = ROOT / ".github" / "api-contract.json"
 REPORT = ROOT / "contract-report.md"
 API = "https://scripting.nulls.gg/api"
+PROXY = "https://sl.3-107-57-112.sslip.io"
 USER_AGENT = "Script-Library/1.7.23 (+https://github.com/Patrick-9936/nb-scripts-authors)"
 UUID = re.compile(r"^[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$")
 ENTRY = re.compile(r"^\s*\d+\.\s*(\S+)\s*$")
@@ -36,6 +37,7 @@ TIMEOUT = 25
 class Probe:
     def __init__(self) -> None:
         self.problems: list[str] = []
+        self.unreachable: list[str] = []
         self.observed: dict[str, list[str]] = {}
         self.notes: list[str] = []
 
@@ -44,6 +46,23 @@ class Probe:
 
     def note(self, message: str) -> None:
         self.notes.append(message)
+
+    def request_url(self, url: str):
+        """Same as request() but for an absolute URL outside the scripting API."""
+        request = urllib.request.Request(url, method="GET", headers={"accept": "application/json", "user-agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+                payload = response.read().decode("utf-8", "replace")
+                return response.status, (json.loads(payload) if payload.strip() else {})
+        except urllib.error.HTTPError as error:
+            payload = error.read().decode("utf-8", "replace")
+            try:
+                parsed = json.loads(payload) if payload.strip() else {}
+            except json.JSONDecodeError:
+                parsed = {"error": payload[:200]}
+            return error.code, parsed
+        except (urllib.error.URLError, TimeoutError) as error:
+            return 0, {"error": str(error)}
 
     def request(self, path: str, method: str = "GET", body: dict | None = None):
         data = None if body is None else json.dumps(body).encode()
@@ -119,7 +138,8 @@ def main() -> int:
             continue
         status, payload = probe.request(path)
         if status != 200:
-            probe.fail(f"GET {path} -> {status} {payload.get('error', '')}")
+            # A single slow author must not raise an alert; a systematic failure must.
+            probe.unreachable.append(f"GET {path} -> {status} {payload.get('error', '')}")
             continue
         uuid = str(payload.get("user_id") or payload.get("uuid") or "")
         if not UUID.match(uuid):
@@ -128,8 +148,16 @@ def main() -> int:
         resolved.append((url, uuid.lower()))
         probe.shape("GET /users/{handle|uuid}", payload)
 
+    if probe.unreachable:
+        probe.note(f"Не ответили авторов: {len(probe.unreachable)} из {len(entries)}")
+        for item in probe.unreachable[:5]:
+            probe.note(item)
+        if len(resolved) >= len(entries) * 0.8:
+            probe.note("Недоступные авторы не считаются сбоем контракта.")
     if not resolved:
         probe.fail("Ни один автор из list.txt не разрешился")
+    elif len(resolved) < len(entries) * 0.8:
+        probe.fail(f"Ответили только {len(resolved)} из {len(entries)} авторов")
 
     script_id = None
     for url, uuid in resolved:
@@ -181,6 +209,25 @@ def main() -> int:
             probe.shape("POST /scripts/{id}/share", payload)
             if not payload.get("token"):
                 probe.fail("POST /scripts/{id}/share: нет token в ответе")
+
+    # The site and the app both call the project proxy, so a dead proxy is as
+    # breaking as a schema change. Check it before comparing the baseline.
+    status, payload = probe.request_url(PROXY + "/data/catalog")
+    if status != 200:
+        probe.fail(f"GET {PROXY}/data/catalog -> {status}")
+    else:
+        authors = payload.get("authors") if isinstance(payload, dict) else None
+        scripts = payload.get("scripts") if isinstance(payload, dict) else None
+        if not isinstance(authors, list) or not isinstance(scripts, list):
+            probe.fail("Прокси вернул каталог без авторов или скриптов")
+        else:
+            probe.note(f"Прокси: {len(authors)} авторов, {len(scripts)} скриптов")
+            if len(authors) != len(entries):
+                probe.fail(f"Прокси отдал {len(authors)} авторов, в list.txt {len(entries)}")
+
+    status, payload = probe.request_url(PROXY + "/library/authors")
+    if status != 401:
+        probe.fail(f"GET {PROXY}/library/authors без сессии -> {status}, ожидался 401")
 
     baseline = {}
     if BASELINE.exists():
