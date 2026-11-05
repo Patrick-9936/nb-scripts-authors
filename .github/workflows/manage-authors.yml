@@ -1,0 +1,103 @@
+name: Manage authors
+
+# Owner-only helper for list.txt. The registry is a plain text file, so the
+# change is applied by a workflow instead of a client token: nothing secret is
+# shipped to the app or the site, and every edit is visible in git history.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Что сделать с реестром авторов'
+        required: true
+        type: choice
+        default: add
+        options: [add, remove, edit, list, validate]
+      url:
+        description: 'add: ссылка на профиль или @handle'
+        required: false
+        type: string
+      target:
+        description: 'remove/edit: ссылка, @handle или номер записи'
+        required: false
+        type: string
+      new_url:
+        description: 'edit: новая ссылка или @handle'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manage-authors
+  cancel-in-progress: false
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply change
+        env:
+          ACTION: ${{ inputs.action }}
+          URL: ${{ inputs.url }}
+          TARGET: ${{ inputs.target }}
+          NEW_URL: ${{ inputs.new_url }}
+        run: |
+          set -euo pipefail
+          case "$ACTION" in
+            add)
+              test -n "$URL" || { echo "::error::Для add нужен параметр url"; exit 1; }
+              python3 .github/scripts/authors.py add "$URL"
+              ;;
+            remove)
+              test -n "$TARGET" || { echo "::error::Для remove нужен параметр target"; exit 1; }
+              python3 .github/scripts/authors.py remove "$TARGET"
+              ;;
+            edit)
+              test -n "$TARGET" && test -n "$NEW_URL" || { echo "::error::Для edit нужны target и new_url"; exit 1; }
+              python3 .github/scripts/authors.py edit "$TARGET" "$NEW_URL"
+              ;;
+            list)
+              python3 .github/scripts/authors.py list
+              ;;
+            validate)
+              python3 .github/scripts/authors.py validate
+              ;;
+          esac
+
+      - name: Commit registry change
+        env:
+          ACTION: ${{ inputs.action }}
+          URL: ${{ inputs.url }}
+          TARGET: ${{ inputs.target }}
+          NEW_URL: ${{ inputs.new_url }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- list.txt; then
+            echo "list.txt не изменился"
+            exit 0
+          fi
+          git config user.name "script-library-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add list.txt
+          git commit -m "Update author registry: $ACTION ${URL:-}${TARGET:-}${NEW_URL:+ -> $NEW_URL}"
+          git push
+          echo "::notice::Реестр авторов обновлён: $(grep -c 'https://' list.txt) записей"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Реестр авторов"
+            echo ""
+            echo "Действие: \`${{ inputs.action }}\`"
+            echo ""
+            echo '```'
+            cat list.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

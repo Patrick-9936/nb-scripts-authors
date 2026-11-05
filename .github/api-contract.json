@@ -1,0 +1,54 @@
+{
+  "endpoints": {
+    "GET /scripts/{id}": [
+      "author_name",
+      "author_uuid",
+      "created_at",
+      "description",
+      "is_favorite",
+      "name",
+      "published_at",
+      "script_id",
+      "updated_at",
+      "user_map_id",
+      "user_map_internal_id"
+    ],
+    "GET /scripts/{id}/parameters": [
+      "parameters"
+    ],
+    "GET /scripts/{id}/parameters []": [
+      "created_at",
+      "default_value",
+      "group_id",
+      "id",
+      "max_value",
+      "min_value",
+      "name",
+      "script_id",
+      "type"
+    ],
+    "GET /users/{handle|uuid}": [
+      "name",
+      "user_id",
+      "username"
+    ],
+    "GET /users/{id}/scripts": [
+      "scripts"
+    ],
+    "GET /users/{id}/scripts []": [
+      "author_name",
+      "author_uuid",
+      "created_at",
+      "description",
+      "is_favorite",
+      "name",
+      "published_at",
+      "script_id",
+      "updated_at"
+    ],
+    "POST /scripts/{id}/share": [
+      "token"
+    ]
+  },
+  "generated_at": "2026-11-05T16:51:25Z"
+}

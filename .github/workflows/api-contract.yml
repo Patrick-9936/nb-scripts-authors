@@ -1,0 +1,76 @@
+name: API contract check
+
+# Watches the live scripting API for silent schema changes and outages.
+# A rename like uuid -> user_id/script_id already broke every client once, so
+# this runs on a schedule and reports into a single tracking issue labelled
+# api-contract. A failing run also emails repository watchers.
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: api-contract
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Probe live API
+        id: probe
+        continue-on-error: true
+        run: python3 .github/scripts/contract.py
+
+      - name: Report to tracking issue
+        if: steps.probe.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          gh label create api-contract --color FBCA04 \
+            --description "Автоматическая проверка контракта API" 2>/dev/null || true
+          {
+            echo "Автоматическая проверка контракта API обнаружила проблему."
+            echo ""
+            echo "Запуск: $RUN_URL"
+            echo ""
+            cat contract-report.md
+          } > issue-body.md
+          number=$(gh issue list --label api-contract --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file issue-body.md
+          else
+            gh issue create \
+              --title "API contract: сервис изменился или недоступен" \
+              --label api-contract \
+              --body-file issue-body.md
+          fi
+
+      - name: Close tracking issue when healthy
+        if: steps.probe.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          number=$(gh issue list --label api-contract --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "Проверка снова проходит, схема совпадает с базовой."
+            gh issue close "$number"
+          fi
+
+      - name: Fail the run when the contract changed
+        if: steps.probe.outcome == 'failure'
+        run: |
+          echo "::error::Контракт API изменился или сервис недоступен — см. issue и contract-report.md"
+          exit 1
