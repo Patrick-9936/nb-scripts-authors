@@ -69,3 +69,18 @@ test("--set accepts a name, a partial name and an index", () => {
   assert.throws(() => parseSetting("Нет такого=1"), /Неизвестный параметр/);
   assert.throws(() => parseSetting("Уровень боя=999"), /допустимо/);
 });
+
+test("the encoded link is pinned, so the format cannot drift silently", () => {
+  // These strings were produced by the web build and the Android app for the same
+  // input. If this test fails, one of the three implementations changed the
+  // payload and battle links would stop working across clients.
+  const SCRIPT = "01a1260f-3d94-763c-9ece-b1ec0e0583ba";
+  const defaults = battleLink({ script: SCRIPT, token: "tok.en", values: [...DEFAULTS] });
+  assert.equal(defaults, "nullsbrawl://createAndJoinRoom?roomname=params:v2:Pj3j9U0uoOci1MeN7XaeHdTJmVX6f9EaIGSfYhNwNIvG5xBHnCZ2CDRhKGpbxGIbMRweDQ1P0BVtZspparyAJWbTJuR2LG9Z1GZqHj8m8Zh2sKZexHcH4jJDRtzQ1oeGdbY8vJ5oY77YcY4C7KOcjnar0mGnTXmCld9W5y0AwJpHGlTYc3PJCYdzEvEpfkfuXQQNzsKZU9kRQMsKA7h9UoW2vGrZ3EldPtZv42lE0ov7qbeMvMtvNHvwpbZ0CzsS8MP0Mr338OT9KQd5Xcajn8qWWF202m2woaYSPW5jyREyr&friendly=1&side=0");
+
+  const values = [...DEFAULTS];
+  values[3] = 5;
+  values[4] = 150;
+  const changed = battleLink({ script: SCRIPT, token: "tok.en", values, banned: [5, 7] });
+  assert.equal(changed, "nullsbrawl://createAndJoinRoom?roomname=params:v2:820PCcatMgazIIbNL4gLzJt75HF7KlKoXpwNjq2uEoMF8c7wMFWHyhxp9g7tGn3Yk8AagyvCA9V4yEAnTDPsT8aQ4YhbWWsBXK2BFg5mhlL8iYDHWOcwyGAGyXK1XyHIPFb165JtfHoDZufTmuhtmvod7aFAvfiPPipfvrrh0KVvfXEvk3bXvWXuITVUEzwlrFSsbtSFEo5FAZu3bu5Hgd5cyMtZLAudHoEJAsVjkrbW1EgShumIzUlJCQkzkMQrquXvYsZIbSNXKdGoHfeKBQSS4trw6x0FdrRmjsffkEx5gQb2DuOr&friendly=1&side=0");
+});
