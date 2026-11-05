@@ -118,14 +118,30 @@ final class UpdateManager {
                 }
                 progress(listener,length,release.size,"Проверяю APK…");StringBuilder checksum=new StringBuilder();for(byte value:digest.digest())checksum.append(String.format(Locale.ROOT,"%02x",value&255));
                 if(length!=release.size||!checksum.toString().equals(release.sha256))throw new IOException("Контрольная сумма APK не совпадает");
+                if(!sameSigner(activity,target))throw new IOException("Подпись обновления не совпадает с установленным приложением");
                 File apk=target;UI.post(()->{pendingApk=apk;listener.accept(new Progress(release.size,release.size,"Готово к установке"));if(!activity.isFinishing()&&!activity.isDestroyed())install(activity,apk,error);});
             }catch(Exception exception){if(target!=null)target.delete();UI.post(()->error.accept(exception.getMessage()==null?"Не удалось загрузить обновление":exception.getMessage()));}
             finally{if(connection!=null)connection.disconnect();synchronized(UpdateManager.class){downloading=false;}}
         });
     }
+    /** Android refuses a mismatched signature anyway; failing early gives a clear message. */
+    private static boolean sameSigner(Activity activity,File apk){
+        try{
+            android.content.pm.PackageManager manager=activity.getPackageManager();
+            android.content.pm.PackageInfo installed=manager.getPackageInfo(activity.getPackageName(),android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            android.content.pm.PackageInfo candidate=manager.getPackageArchiveInfo(apk.getAbsolutePath(),android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES);
+            if(installed==null||candidate==null||installed.signingInfo==null||candidate.signingInfo==null)return false;
+            android.content.pm.Signature[] current=installed.signingInfo.getApkContentsSigners(),next=candidate.signingInfo.getApkContentsSigners();
+            if(current==null||next==null||current.length==0||next.length==0)return false;
+            java.util.Set<String> known=new java.util.HashSet<>();for(android.content.pm.Signature signature:current)known.add(signature.toCharsString());
+            for(android.content.pm.Signature signature:next)if(!known.contains(signature.toCharsString()))return false;
+            return true;
+        }catch(Exception ignored){return false;}
+    }
     static void installDownloaded(Activity activity,Consumer<String> error){File apk=pendingApk;if(apk!=null&&apk.isFile())install(activity,apk,error);else error.accept("Не удалось загрузить обновление");}
 
     private static void install(Activity activity, File apk, Consumer<String> error) {
+        if (!sameSigner(activity, apk)) { error.accept("Подпись обновления не совпадает с установленным приложением"); return; }
         if (!activity.getPackageManager().canRequestPackageInstalls()) {
             pendingApk = apk;awaitingInstallPermission=true;
             Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + activity.getPackageName()));

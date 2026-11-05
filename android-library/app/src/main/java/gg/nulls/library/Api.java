@@ -106,7 +106,7 @@ final class Api {
             }
         }
     }
-    private static boolean retryable(int status){return status==429||status==502||status==503||status==504;}
+    static boolean retryable(int status){return status==429||status==502||status==503||status==504;}
     private static long retryAfter(HttpURLConnection connection){try{String value=connection.getHeaderField("Retry-After");if(value==null)return 0;value=value.trim();if(value.matches("\\d{1,5}"))return Long.parseLong(value);java.time.ZonedDateTime when=java.time.ZonedDateTime.parse(value,java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);long seconds=java.time.Duration.between(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC),when.withZoneSameInstant(java.time.ZoneOffset.UTC)).getSeconds();return Math.max(0,Math.min(60,seconds));}catch(Exception ignored){return 0;}}
     private static long backoff(long previous,int attempt,long retryAfter){
         long wait=Math.min(BACKOFF_MAX,Math.max(previous*2,BACKOFF_BASE*(1L<<Math.min(attempt-1,4))));

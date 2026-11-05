@@ -23,4 +23,8 @@ public class CoreTest {
         JSONArray raw=new JSONArray().put(new JSONObject().put("id",1).put("created_at","2026-09-30T14:10:00Z").put("description",JSONObject.NULL)).put(new JSONObject().put("id",2).put("created_at","2026-10-01T18:34:17Z").put("description","Changed behavior").put("private","secret"));
         List<JSONObject> history=Core.releases(raw);assertEquals(2,history.size());assertEquals(2,history.get(0).getInt("id"));assertEquals("Changed behavior",history.get(0).getString("description"));assertFalse(history.get(0).has("private"));assertEquals("",history.get(1).getString("description"));
     }
+    @Test public void onlyTransientServiceFailuresAreRetried(){
+        assertTrue(Api.retryable(429));assertTrue(Api.retryable(502));assertTrue(Api.retryable(503));assertTrue(Api.retryable(504));
+        assertFalse(Api.retryable(400));assertFalse(Api.retryable(401));assertFalse(Api.retryable(403));assertFalse(Api.retryable(404));assertFalse(Api.retryable(409));
+    }
 }
