@@ -11,6 +11,7 @@ final class Repository {
     private final LinkedHashMap<String,JSONObject> scripts=new LinkedHashMap<>(),authors=new LinkedHashMap<>();
     private final HashMap<String,String> code=new HashMap<>();
     private final ConcurrentHashMap<String,JSONArray> parameterCache=new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String,Boolean> availability=new ConcurrentHashMap<>();
     private int codeBytes=0;
     volatile long refreshed=0;
     volatile boolean indexing=false,cancelIndex=false;
@@ -40,6 +41,15 @@ final class Repository {
     }
     List<JSONObject> own()throws Exception{JSONObject me=api.identity();if(me==null)throw new IOException("Требуется вход");JSONArray list=api.request("GET","/users/"+me.getString("uuid")+"/scripts",null).getJSONArray("scripts");List<JSONObject> result=new ArrayList<>();for(int i=0;i<list.length();i++){JSONObject s=Core.publicScript(list.getJSONObject(i));s.put("author_uuid",me.getString("uuid"));if(s.optString("author_name").isEmpty())s.put("author_name",me.optString("name"));result.add(s);}writeOwnCache(me.getString("uuid"),result);return result;}
     JSONArray parameters(String id)throws Exception{Core.requireUuid(id);JSONArray cached=parameterCache.get(id);if(cached!=null)return new JSONArray(cached.toString());JSONArray loaded=api.request("GET","/scripts/"+id+"/parameters",null).getJSONArray("parameters");parameterCache.put(id,new JSONArray(loaded.toString()));return loaded;}
+    /** null until probed; the service only reveals author verification through the share endpoint. */
+    Boolean knownAvailability(String id){return availability.get(id);}
+    boolean checkAvailability(String id)throws Exception{
+        Core.requireUuid(id);Boolean cached=availability.get(id);if(cached!=null)return cached;
+        boolean value;
+        try{api.request("POST","/scripts/"+id+"/share",null);value=true;}
+        catch(Api.Failure error){if(error.status==400||error.status==403||error.status==404)value=false;else throw error;}
+        availability.put(id,value);return value;
+    }
     List<JSONObject> cachedOwn(String account){List<JSONObject> result=new ArrayList<>();if(account==null||account.isEmpty())return result;File file=new File(context.getFilesDir(),"own-scripts.json");try(FileInputStream in=new FileInputStream(file)){JSONObject root=new JSONObject(Api.read(in,8*1024*1024));if(!account.equals(root.optString("account")))return result;JSONArray list=root.optJSONArray("scripts");if(list!=null)for(int i=0;i<list.length();i++)result.add(Core.publicScript(list.getJSONObject(i)));}catch(Exception ignored){}return result;}
     private void writeOwnCache(String account,List<JSONObject> items){try{JSONObject root=new JSONObject().put("account",account).put("scripts",new JSONArray(items));File temporary=new File(context.getFilesDir(),"own-scripts.tmp");try(FileOutputStream output=new FileOutputStream(temporary)){output.write(root.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}if(!temporary.renameTo(new File(context.getFilesDir(),"own-scripts.json")))temporary.delete();}catch(Exception ignored){}}
     String loadCode(String id)throws Exception{Core.requireUuid(id);String cached=code(id);if(cached!=null)return cached;JSONObject account=api.identity();if(account==null)throw new IOException("Требуется вход");String accountId=account.getString("uuid");String value=Core.clean(api.request("GET","/scripts/"+id+"/content",null).getString("content"));synchronized(this){if(api.authenticated()&&accountId.equals(api.identity().optString("uuid"))&&codeBytes+value.length()*2<=24*1024*1024){code.put(id,value);codeBytes+=value.length()*2;}}return value;}
@@ -70,7 +80,7 @@ final class Repository {
     }
     void flushCodeCache(){writeCodeCache();}
     synchronized void forgetCode(String id){String previous=code.remove(id);if(previous!=null)codeBytes-=previous.length()*2;}
-    synchronized void clearAccount(){cancelIndex=true;code.clear();parameterCache.clear();codeBytes=0;indexStatus="Код ещё не индексирован";cacheAccount="";scripts.clear();authors.clear();refreshed=0;File file=new File(context.getFilesDir(),"public-catalog.json");if(file.exists())file.delete();new File(context.getFilesDir(),"indexed-code.json").delete();new File(context.getFilesDir(),"own-scripts.json").delete();}
+    synchronized void clearAccount(){cancelIndex=true;code.clear();parameterCache.clear();availability.clear();codeBytes=0;indexStatus="Код ещё не индексирован";cacheAccount="";scripts.clear();authors.clear();refreshed=0;File file=new File(context.getFilesDir(),"public-catalog.json");if(file.exists())file.delete();new File(context.getFilesDir(),"indexed-code.json").delete();new File(context.getFilesDir(),"own-scripts.json").delete();}
     synchronized void bindAccount(String id){if(!cacheAccount.isEmpty()&&!cacheAccount.equals(id))clearAccount();cacheAccount=id;if(code.isEmpty())readCodeCache();}
     private synchronized void readCache(){File file=new File(context.getFilesDir(),"public-catalog.json");try(FileInputStream in=new FileInputStream(file)){JSONObject o=new JSONObject(Api.read(in,8*1024*1024));cacheAccount=o.optString("account");JSONArray a=o.getJSONArray("authors"),s=o.getJSONArray("scripts");for(int i=0;i<a.length();i++){JSONObject v=Core.publicUser(a.getJSONObject(i));authors.put(v.getString("uuid"),v);}for(int i=0;i<s.length();i++){JSONObject v=Core.publicScript(s.getJSONObject(i));scripts.put(v.getString("uuid"),v);}refreshed=o.optLong("refreshed");}catch(Exception ignored){}}
     private synchronized void writeCache(){try{JSONObject o=new JSONObject().put("account",cacheAccount).put("refreshed",refreshed).put("authors",new JSONArray(authors.values())).put("scripts",new JSONArray(scripts.values()));File tmp=new File(context.getFilesDir(),"public-catalog.tmp");try(FileOutputStream out=new FileOutputStream(tmp)){out.write(o.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));}if(!tmp.renameTo(new File(context.getFilesDir(),"public-catalog.json")))tmp.delete();}catch(Exception ignored){}}

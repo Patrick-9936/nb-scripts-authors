@@ -6,7 +6,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 final class Api {
-    static class Failure extends IOException { final int status; Failure(int s,String text){super(text);status=s;} }
+    static class Failure extends IOException { final int status;final long retryAfter; Failure(int s,String text){this(s,text,0);} Failure(int s,String text,long after){super(text);status=s;retryAfter=after;} }
+    /** Attempts per request. 429/5xx and socket timeouts are retried with backoff. */
+    private static final int ATTEMPTS=4;
+    private static final long BACKOFF_BASE=600,BACKOFF_MAX=8000;
     private final CookieManager cookies=new CookieManager(null,CookiePolicy.ACCEPT_ORIGINAL_SERVER);
     private volatile String username="",password="",bearer="";
     private volatile JSONObject me,cachedMe;private volatile long sessionRevision;
@@ -89,7 +92,30 @@ final class Api {
         HttpURLConnection connection=(HttpURLConnection)new URL("https://esmqzozbwufdixcxgtts.supabase.co/functions/v1/settings-sync").openConnection();connection.setConnectTimeout(5000);connection.setReadTimeout(10000);connection.setInstanceFollowRedirects(false);connection.setRequestMethod("POST");connection.setRequestProperty("Content-Type","application/json");connection.setRequestProperty("x-nulls-cookie",cookieHeader);connection.setRequestProperty("x-nulls-bearer",token);connection.setDoOutput(true);
         try{byte[] data=new JSONObject().put("op","telemetry").put("platform","android").put("client_id",client).put("version",BuildConfig.VERSION_NAME).toString().getBytes(StandardCharsets.UTF_8);connection.setFixedLengthStreamingMode(data.length);try(OutputStream out=connection.getOutputStream()){out.write(data);}if(connection.getResponseCode()!=200)throw new IOException("usage");try(InputStream in=connection.getInputStream()){read(in,4096);}}finally{connection.disconnect();}
     }
+    /** Retries transient failures so one 429 or timeout does not abort a whole refresh. */
     private JSONObject raw(String method,String path,JSONObject body)throws Exception{
+        long pause=0;
+        for(int attempt=1;;attempt++){
+            try{return rawOnce(method,path,body);}
+            catch(Failure error){
+                if(attempt>=ATTEMPTS||!transient(error.status))throw error;
+                pause=backoff(pause,attempt,error.retryAfter);
+            }catch(java.net.SocketTimeoutException|java.net.ConnectException|java.net.NoRouteToHostException error){
+                if(attempt>=ATTEMPTS)throw error;
+                pause=backoff(pause,attempt,0);
+            }
+        }
+    }
+    private static boolean transient(int status){return status==429||status==502||status==503||status==504;}
+    private static long retryAfter(HttpURLConnection connection){try{String value=connection.getHeaderField("Retry-After");if(value==null)return 0;value=value.trim();if(value.matches("\\d{1,5}"))return Long.parseLong(value);java.time.ZonedDateTime when=java.time.ZonedDateTime.parse(value,java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME);long seconds=java.time.Duration.between(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC),when.withZoneSameInstant(java.time.ZoneOffset.UTC)).getSeconds();return Math.max(0,Math.min(60,seconds));}catch(Exception ignored){return 0;}}
+    private static long backoff(long previous,int attempt,long retryAfter){
+        long wait=Math.min(BACKOFF_MAX,Math.max(previous*2,BACKOFF_BASE*(1L<<Math.min(attempt-1,4))));
+        if(retryAfter>0)wait=Math.min(30000,Math.max(wait,retryAfter*1000));
+        wait+=(long)(Math.random()*250);
+        try{Thread.sleep(wait);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+        return wait;
+    }
+    private JSONObject rawOnce(String method,String path,JSONObject body)throws Exception{
         if(!path.startsWith("/")||path.contains("..")||path.contains("?token"))throw new IllegalArgumentException("Некорректный путь API");
         URI uri=URI.create(Core.API+path);HttpURLConnection c=(HttpURLConnection)uri.toURL().openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setInstanceFollowRedirects(false);c.setRequestMethod(method);c.setRequestProperty("Accept","application/json");
         for(Map.Entry<String,List<String>> entry:cookies.get(uri,Collections.emptyMap()).entrySet())c.setRequestProperty(entry.getKey(),String.join("; ",entry.getValue()));
@@ -99,11 +125,26 @@ final class Api {
             if(status<200||status>=300){String error=read(c.getErrorStream(),65536),lower=error.toLowerCase(Locale.ROOT);String message=status==409?(path.equals("/auth/connect")?"Этот Null’s Connect уже связан с другим аккаунтом.":"Имя пользователя уже занято."):status==401?"Сессия завершена. Войдите снова.":status==403?"Аккаунту недоступно это действие.":status==404?"Скрипт или автор не найден.":status==429?"Слишком много запросов. Попробуйте позже.":"Сервис ответил HTTP "+status;
                 if(path.endsWith("/share")&&(status==400||status==403||status==404)||lower.contains("script cannot be used in a battle")||lower.contains("author is not verified")||lower.contains("author not verified")||lower.contains("author does not have connect"))message="Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.";
                 else if(status==400){if(error.contains("sign_up_token")||error.contains("Sign up token"))message="Подтверждение истекло. Войдите через Null’s Connect снова.";else if(error.contains("OIDC"))message="Не удалось подтвердить Null’s Connect. Повторите вход.";else if(path.startsWith("/auth/register")||path.startsWith("/auth/connect/register"))message="Проверьте имя пользователя, имя и пароль.";else message="Сервис отклонил запрос. Проверьте параметры и права аккаунта.";}
-                throw new Failure(status,message);
+                throw new Failure(status,message,retryAfter(c));
             }
             String text=read(c.getInputStream(),8*1024*1024);if(text.trim().isEmpty())return new JSONObject();return new JSONObject(text);
         }finally{c.disconnect();}
     }
     static String read(InputStream stream,int limit)throws IOException{if(stream==null)return "";try(InputStream in=stream;ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){if(out.size()+n>limit)throw new IOException("Файл превышает допустимый размер");out.write(b,0,n);}return out.toString(StandardCharsets.UTF_8.name());}}
-    static String authorList()throws IOException{HttpURLConnection c=(HttpURLConnection)new URL(Core.AUTHORS+"?refresh="+System.currentTimeMillis()).openConnection();c.setUseCaches(false);c.setRequestProperty("Cache-Control","no-cache");c.setRequestProperty("Pragma","no-cache");c.setConnectTimeout(15000);c.setReadTimeout(15000);try{if(c.getResponseCode()!=200)throw new IOException("Список авторов временно недоступен");return read(c.getInputStream(),256*1024);}finally{c.disconnect();}}
+    static String authorList()throws IOException{
+        IOException last=null;
+        for(int attempt=1;attempt<=ATTEMPTS;attempt++){
+            HttpURLConnection c=(HttpURLConnection)new URL(Core.AUTHORS+"?refresh="+System.currentTimeMillis()).openConnection();
+            try{
+                c.setUseCaches(false);c.setRequestProperty("Cache-Control","no-cache");c.setRequestProperty("Pragma","no-cache");c.setConnectTimeout(15000);c.setReadTimeout(15000);
+                int status=c.getResponseCode();
+                if(status==200)return read(c.getInputStream(),256*1024);
+                last=new IOException(status==429?"Слишком много запросов. Повторите позже.":"Список авторов временно недоступен");
+                if(!transient(status))throw last;
+            }catch(java.net.SocketTimeoutException|java.net.ConnectException error){last=new IOException("Список авторов временно недоступен",error);}
+            finally{c.disconnect();}
+            if(attempt<ATTEMPTS)backoff(0,attempt,0);
+        }
+        throw last==null?new IOException("Список авторов временно недоступен"):last;
+    }
 }
