@@ -47,10 +47,12 @@ npm install -g https://github.com/Patrick-9936/nb-scripts-authors/releases/lates
 script-library doctor
 ```
 
-Или прямо из репозитория:
+Или из клонированного репозитория (пакет лежит в подпапке `cli`, поэтому
+устанавливать нужно именно её):
 
 ```bash
-npm install -g github:Patrick-9936/nb-scripts-authors#android-script-library
+git clone --depth 1 --branch android-script-library https://github.com/Patrick-9936/nb-scripts-authors.git
+npm install -g ./nb-scripts-authors/cli
 ```
 
 Требуется Node 18 или новее. Проверить окружение:
