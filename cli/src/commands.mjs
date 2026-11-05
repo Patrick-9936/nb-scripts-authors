@@ -2,7 +2,7 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Api, ApiError, connect, persist } from "./api.mjs";
-import { loadCatalog, reference, search, sortScripts } from "./catalog.mjs";
+import { fetchRegistry, loadCatalog, reference, search, sortScripts } from "./catalog.mjs";
 import { battleLink, isUuid, parseBattleLink, parseSetting } from "./battle.mjs";
 import { DEFAULTS, IDS, MAX, MIN, NAMES, indexOfId, isFlag } from "./params.mjs";
 import { authorTable, bold, bytes, cyan, dim, error, green, info, magenta, parameterTable, relative, scriptTable, table, warn, yellow } from "./format.mjs";
@@ -410,7 +410,6 @@ export async function doctor(flags) {
   await check("Платформа", async () => `${process.platform} ${process.arch}`);
   await check("Каталог настроек", async () => config.downloadDir);
   await check("Список авторов", async () => {
-    const { fetchRegistry } = await import("./catalog.mjs");
     const list = await fetchRegistry(config.registry);
     return `${list.length} авторов`;
   });

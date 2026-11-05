@@ -26,6 +26,7 @@
   "files": [
     "bin",
     "src",
+    "dist",
     "README.md",
     "LICENSE"
   ],
@@ -33,9 +34,11 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test tests/*.test.mjs",
+    "test": "node scripts/bundle.mjs && node --test tests/*.test.mjs",
+    "bundle": "node scripts/bundle.mjs",
     "start": "node bin/script-library.mjs",
-    "doctor": "node bin/script-library.mjs doctor"
+    "doctor": "node bin/script-library.mjs doctor",
+    "prepack": "node scripts/bundle.mjs"
   },
   "repository": {
     "type": "git",

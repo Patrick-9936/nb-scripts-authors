@@ -1,7 +1,11 @@
 name: CLI
 
-# The CLI is published to npm, so its tests and the packed tarball are checked on
-# every change. Publishing runs only for a cli-v* tag and needs NPM_TOKEN.
+# The CLI is distributed through GitHub releases, not a package registry.
+# A tag like cli-v1.0.0 builds the single-file bundle and the tarball and
+# attaches both to a release, so it can be installed with:
+#   npm install -g https://github.com/.../releases/download/cli-v1.0.0/script-library-cli-1.0.0.tgz
+# or run without installing anything:
+#   node script-library.mjs list
 on:
   push:
     paths: ['cli/**', '.github/workflows/cli.yml']
@@ -28,15 +32,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - name: Tests
+      - name: Tests and bundle
         working-directory: cli
         run: npm test
-      - name: Help and version run
+      - name: The bundle runs on its own
         working-directory: cli
         run: |
-          node bin/script-library.mjs --version
-          node bin/script-library.mjs --help > /dev/null
-      - name: Package installs and runs
+          node dist/script-library.mjs --version
+          node dist/script-library.mjs params --json > /dev/null
+      - name: The package installs and runs
         working-directory: cli
         run: |
           set -euo pipefail
@@ -48,19 +52,17 @@ jobs:
           ./node_modules/.bin/script-library --version
           ./node_modules/.bin/sl --version
 
-  publish:
+  release:
     if: startsWith(github.ref, 'refs/tags/cli-v')
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
       - name: Check the tag matches the package version
         working-directory: cli
         env:
@@ -72,14 +74,25 @@ jobs:
             echo "::error::Тег $TAG не совпадает с версией $version в package.json"
             exit 1
           fi
-      - name: Publish
+      - name: Build the bundle and the tarball
         working-directory: cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::Добавьте секрет NPM_TOKEN с правом публикации"
-            exit 1
+          npm run bundle
+          npm pack
+          cp dist/script-library.mjs "$RUNNER_TEMP/script-library.mjs"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          notes="cli/RELEASE-NOTES.md"
+          tarball=$(ls cli/script-library-cli-*.tgz)
+          if [ -f "$notes" ]; then
+            gh release create "$TAG" "$tarball" "$RUNNER_TEMP/script-library.mjs" \
+              --verify-tag --title "$TAG" --notes-file "$notes"
+          else
+            gh release create "$TAG" "$tarball" "$RUNNER_TEMP/script-library.mjs" \
+              --verify-tag --title "$TAG" --generate-notes
           fi
-          npm publish --access public --provenance

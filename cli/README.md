@@ -5,8 +5,7 @@
 Node 18+ — без зависимостей и без сборки.
 
 ```bash
-npm install -g script-library-cli
-script-library doctor
+node script-library.mjs list
 ```
 
 ## Возможности
@@ -20,12 +19,38 @@ script-library doctor
   ссылка `nullsbrawl://`, которую открывает игра.
 - **Избранное и недавние** — хранятся локально.
 - **`--json`** — машинный вывод для скриптов и конвейеров.
+- **Один файл** — собранная версия запускается без установки пакетов.
 
 ## Установка
 
+Пакет не публикуется в реестре npm. Есть два способа — оба без зависимостей.
+
+**Один файл, ничего устанавливать не нужно.** Скачайте `script-library.mjs` из
+последнего релиза и запускайте через Node:
+
 ```bash
-npm install -g script-library-cli      # Windows, Linux, macOS
-npx script-library-cli list            # без установки
+curl -LO https://github.com/Patrick-9936/nb-scripts-authors/releases/latest/download/script-library.mjs
+node script-library.mjs list
+```
+
+На Windows то же самое в PowerShell:
+
+```powershell
+curl.exe -LO https://github.com/Patrick-9936/nb-scripts-authors/releases/latest/download/script-library.mjs
+node script-library.mjs list
+```
+
+**Как глобальная команда.** Установите архив из релиза:
+
+```bash
+npm install -g https://github.com/Patrick-9936/nb-scripts-authors/releases/latest/download/script-library-cli-1.0.0.tgz
+script-library doctor
+```
+
+Или прямо из репозитория:
+
+```bash
+npm install -g github:Patrick-9936/nb-scripts-authors#android-script-library
 ```
 
 Требуется Node 18 или новее. Проверить окружение:
