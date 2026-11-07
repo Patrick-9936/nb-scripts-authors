@@ -1,0 +1,10 @@
+<resources>
+    <string name="widget_name">Script Library</string>
+    <string name="widget_description">Быстрый переход в библиотеку, свои скрипты, избранное и импорт .lua.</string>
+    <string name="widget_refresh">Обновить виджет</string>
+    <string name="widget_updated">Обновлено</string>
+    <string name="widget_search">Библиотека</string>
+    <string name="widget_mine">Мои скрипты</string>
+    <string name="widget_favorites">Избранное</string>
+    <string name="widget_import">Импорт .lua</string>
+</resources>

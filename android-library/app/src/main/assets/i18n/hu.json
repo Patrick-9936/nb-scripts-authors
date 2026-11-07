@@ -463,5 +463,12 @@
   "Перемешано": "Megkeverve",
   "Библиотека обновлена": "Könyvtár frissítve",
   "Скрипт уже открывается": "A szkript már megnyílik",
-  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "A felület beállításai, a konfigurációk és a paraméterek bejelentkezés után szinkronizálódnak."
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "A felület beállításai, a konfigurációk és a paraméterek bejelentkezés után szinkronizálódnak.",
+  "Цвет HEX": "HEX color",
+  "Палитра цветов · RGB": "Color palette · RGB",
+  "Применить цвет": "Apply color",
+  "Введите цвет в формате #RRGGBB": "Enter a color in #RRGGBB format",
+  "Системные цвета применены": "System colors applied",
+  "Цвет применён": "Color applied",
+  "Системные цвета": "System colors"
 }

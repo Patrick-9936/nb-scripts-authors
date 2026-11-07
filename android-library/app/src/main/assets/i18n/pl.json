@@ -463,5 +463,12 @@
   "Перемешано": "Przetasowano",
   "Библиотека обновлена": "Biblioteka zaktualizowana",
   "Скрипт уже открывается": "Skrypt jest już otwierany",
-  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Ustawienia interfejsu, konfiguracje i parametry synchronizują się po zalogowaniu."
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Ustawienia interfejsu, konfiguracje i parametry synchronizują się po zalogowaniu.",
+  "Цвет HEX": "HEX color",
+  "Палитра цветов · RGB": "Color palette · RGB",
+  "Применить цвет": "Apply color",
+  "Введите цвет в формате #RRGGBB": "Enter a color in #RRGGBB format",
+  "Системные цвета применены": "System colors applied",
+  "Цвет применён": "Color applied",
+  "Системные цвета": "System colors"
 }

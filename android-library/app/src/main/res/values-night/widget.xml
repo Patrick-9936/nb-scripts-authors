@@ -1,0 +1,9 @@
+<resources>
+    <color name="widget_background">#171D2A</color>
+    <color name="widget_outline">#30394D</color>
+    <color name="widget_action_background">#222B3B</color>
+    <color name="widget_text">#F5F7FF</color>
+    <color name="widget_muted">#ABB4C7</color>
+    <color name="widget_accent">#AEBBFF</color>
+    <color name="widget_ripple">#26AEBBFF</color>
+</resources>

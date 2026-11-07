@@ -1,0 +1,31 @@
+<resources>
+    <string name="widget_name">Script Library</string>
+    <string name="widget_description">Quickly open the library, your scripts, favorites or Lua import.</string>
+    <string name="widget_refresh">Refresh widget</string>
+    <string name="widget_updated">Updated</string>
+    <string name="widget_search">Library</string>
+    <string name="widget_mine">My scripts</string>
+    <string name="widget_favorites">Favorites</string>
+    <string name="widget_import">Import .lua</string>
+    <color name="widget_background">#171D2A</color>
+    <color name="widget_outline">#30394D</color>
+    <color name="widget_action_background">#222B3B</color>
+    <color name="widget_text">#F5F7FF</color>
+    <color name="widget_muted">#ABB4C7</color>
+    <color name="widget_accent">#AEBBFF</color>
+    <color name="widget_ripple">#26AEBBFF</color>
+    <style name="LibraryWidgetAction">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/widget_action</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+</resources>

@@ -507,5 +507,12 @@
   "Перемешано": "Shuffled",
   "Библиотека обновлена": "Library updated",
   "Скрипт уже открывается": "The script is already opening",
-  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Interface settings, configurations, and parameters sync after sign-in."
+  "Настройки интерфейса, конфигурации и параметры синхронизируются после входа.": "Interface settings, configurations, and parameters sync after sign-in.",
+  "Цвет HEX": "HEX color",
+  "Палитра цветов · RGB": "Color palette · RGB",
+  "Применить цвет": "Apply color",
+  "Введите цвет в формате #RRGGBB": "Enter a color in #RRGGBB format",
+  "Системные цвета применены": "System colors applied",
+  "Цвет применён": "Color applied",
+  "Системные цвета": "System colors"
 }
