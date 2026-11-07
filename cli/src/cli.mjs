@@ -25,6 +25,7 @@ ${bold("Аккаунт")}
   login --user <имя> --password <пароль>
   logout                               удалить сохранённую сессию
   whoami                               кто вошёл
+  sync                                 синхронизировать общие настройки
   mine                                 свои скрипты
   favorites                            избранное
   favorite <uuid>                      добавить или убрать из избранного
@@ -72,6 +73,7 @@ const COMMANDS = {
   login: flags => commands.login(flags),
   logout: flags => commands.logout(flags),
   whoami: flags => commands.whoami(flags),
+  sync: flags => commands.sync(flags),
   mine: flags => commands.mine(flags),
   favorites: flags => commands.favorites(flags),
   favorite: (flags, positionals) => commands.favorite(positionals[0], flags),

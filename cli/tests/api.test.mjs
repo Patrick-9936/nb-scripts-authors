@@ -70,3 +70,25 @@ test("a share refusal explains the unverified author", async () => {
     });
   } finally { globalThis.fetch = original; }
 });
+
+test("settings sync sends the shared-auth headers and checks the verified account", async () => {
+  const original = globalThis.fetch;
+  const uuid = "11111111-2222-3333-4444-555555555555";
+  try {
+    let request;
+    globalThis.fetch = async (url, options) => {
+      request = { url, options };
+      return new Response(JSON.stringify({ user_uuid: uuid, values: { theme: "dark" }, initialized: true }), { headers: { "content-type": "application/json" } });
+    };
+    const api = new Api({ jar: new Jar({ session: "cookie-value" }), bearer: "bearer-value" });
+    api.identity = { uuid };
+    const body = { initialize: true, changes: { "author:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa": true } };
+    const result = await api.syncSettings(body, uuid);
+    assert.equal(result.user_uuid, uuid);
+    assert.equal(request.url, "https://esmqzozbwufdixcxgtts.supabase.co/functions/v1/settings-sync");
+    assert.equal(request.options.headers["x-nulls-cookie"], "session=cookie-value");
+    assert.equal(request.options.headers["x-nulls-bearer"], "bearer-value");
+    assert.deepEqual(JSON.parse(request.options.body), body);
+    await assert.rejects(() => api.syncSettings(body, "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), /Аккаунт изменён/);
+  } finally { globalThis.fetch = original; }
+});

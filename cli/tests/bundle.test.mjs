@@ -24,6 +24,7 @@ test("the bundle prints help and the full parameter list", async () => {
   const help = await run("node", [bundle, "--help"]);
   assert.match(help.stdout, /Использование/);
   assert.match(help.stdout, /battle/);
+  assert.match(help.stdout, /sync\s+синхронизировать общие настройки/);
 
   const params = await run("node", [bundle, "params", "--json"]);
   const list = JSON.parse(params.stdout);

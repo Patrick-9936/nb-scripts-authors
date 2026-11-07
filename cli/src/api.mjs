@@ -9,6 +9,7 @@ const UUID = /^[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$/;
 const TRANSIENT = new Set([429, 502, 503, 504]);
 const ATTEMPTS = 4;
 const USER_AGENT = "script-library-cli";
+const SETTINGS_SYNC = "https://esmqzozbwufdixcxgtts.supabase.co/functions/v1/settings-sync";
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -148,6 +149,59 @@ export class Api {
     }
   }
 
+  async syncSettings(body, expectedAccount = this.identity?.uuid) {
+    const account = String(expectedAccount || "").toLowerCase();
+    if (!UUID.test(account) || !this.identity || this.identity.uuid.toLowerCase() !== account) {
+      throw new ApiError(409, "Аккаунт изменён. Повторите синхронизацию после входа.");
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)
+      || typeof body.initialize !== "boolean" || !body.changes
+      || typeof body.changes !== "object" || Array.isArray(body.changes)) {
+      throw new Error("Некорректный запрос синхронизации настроек");
+    }
+
+    let wait = 0;
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        const headers = { accept: "application/json", "content-type": "application/json", "user-agent": USER_AGENT };
+        const cookie = this.jar.header();
+        if (cookie) headers["x-nulls-cookie"] = cookie;
+        if (this.bearer) headers["x-nulls-bearer"] = this.bearer;
+        const response = await fetch(SETTINGS_SYNC, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+          redirect: "manual",
+          signal: AbortSignal.timeout(25000),
+        });
+        const text = await response.text();
+        let value = {};
+        try { value = text ? JSON.parse(text) : {}; } catch { value = { error: text.slice(0, 200) }; }
+        if (!response.ok) {
+          const failure = new ApiError(response.status, message(response.status, value, "/settings-sync"));
+          const retryAfter = response.headers.get("retry-after");
+          if (retryAfter) failure.retryAfter = Number(retryAfter);
+          throw failure;
+        }
+        if (String(value.user_uuid || "").toLowerCase() !== account || !value.values || typeof value.values !== "object" || Array.isArray(value.values) || typeof value.initialized !== "boolean") {
+          throw new ApiError(502, "Сервис вернул некорректный ответ синхронизации.");
+        }
+        return value;
+      } catch (failure) {
+        if (this.identity?.uuid?.toLowerCase() !== account) throw new ApiError(409, "Аккаунт изменён. Повторите синхронизацию после входа.");
+        const retryable = (failure instanceof ApiError && TRANSIENT.has(failure.status))
+          || failure.name === "TimeoutError"
+          || failure.name === "AbortError"
+          || failure.code === "ECONNRESET"
+          || failure.code === "ECONNREFUSED"
+          || failure.code === "ENOTFOUND";
+        if (!retryable || attempt >= ATTEMPTS) throw failure;
+        wait = backoff(wait, attempt, failure.retryAfter);
+        await sleep(wait);
+      }
+    }
+  }
+
   script(uuid) { return this.request("GET", `/scripts/${uuid}`); }
   scriptContent(uuid) { return this.request("GET", `/scripts/${uuid}/content`); }
   parameters(uuid) { return this.request("GET", `/scripts/${uuid}/parameters`); }
@@ -170,6 +224,7 @@ export class Api {
 function message(status, body, path) {
   const raw = String(body?.error || "");
   const lower = raw.toLowerCase();
+  if (path === "/settings-sync" && status === 409) return raw || "Аккаунт изменён. Повторите синхронизацию после входа.";
   if (path.endsWith("/share") && [400, 403, 404].includes(status)) return "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.";
   if (lower.includes("author is not verified") || lower.includes("author not verified") || lower.includes("author does not have connect")) {
     return "Этот скрипт нельзя использовать в бою, потому что его автор не подтверждён.";

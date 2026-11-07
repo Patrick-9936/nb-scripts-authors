@@ -6,7 +6,8 @@ import { fetchRegistry, loadCatalog, reference, search, sortScripts } from "./ca
 import { battleLink, isUuid, parseBattleLink, parseSetting } from "./battle.mjs";
 import { DEFAULTS, IDS, MAX, MIN, NAMES, indexOfId, isFlag } from "./params.mjs";
 import { authorTable, bold, bytes, cyan, dim, error, green, info, magenta, parameterTable, relative, scriptTable, table, warn, yellow } from "./format.mjs";
-import { clearSession, configDir, loadSettings, rememberRecent, saveSession, toggleFavorite, updateSettings } from "./store.mjs";
+import { clearSession, configDir, loadSettings, rememberRecent, saveSession, saveSettings, toggleFavorite, updateSettings } from "./store.mjs";
+import { synchronizeSettings } from "./settings-sync.mjs";
 import { canOpen, openTarget } from "./open.mjs";
 import { compareVersions, latestRelease } from "./update.mjs";
 
@@ -82,6 +83,27 @@ export async function whoami(flags) {
   const api = await requireLogin();
   if (flags.json) return emit(true, api.identity);
   out(`${bold(api.identity.name || api.identity.username)} ${dim(`@${api.identity.username}`)}\n${api.identity.uuid}`);
+  return 0;
+}
+
+export async function sync(flags) {
+  const api = await requireLogin();
+  const result = await synchronizeSettings(api, loadSettings(), saveSettings);
+  saveSettings(result.settings);
+  const account = api.identity;
+  const summary = {
+    uuid: account.uuid,
+    username: account.username,
+    initialized: result.initialized,
+    pending: result.pending,
+    blockedAuthors: result.settings.blockedAuthors.length,
+    blockedScripts: result.settings.blockedScripts.length,
+    battles: Object.keys(result.settings.battles).length,
+  };
+  if (flags.json) return emit(true, summary);
+  out(`${green("Синхронизировано")} ${dim(`@${account.username || account.uuid}`)}`);
+  info(dim(`${summary.blockedAuthors} авторов · ${summary.blockedScripts} скриптов · ${summary.battles} боёв`));
+  if (result.pending) info(yellow(`Осталось отправить изменений: ${result.pending}. Повторите script-library sync.`));
   return 0;
 }
 

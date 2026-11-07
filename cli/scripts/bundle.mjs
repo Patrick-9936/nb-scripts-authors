@@ -21,6 +21,7 @@ const MODULES = [
   "src/format.mjs",
   "src/store.mjs",
   "src/api.mjs",
+  "src/settings-sync.mjs",
   "src/catalog.mjs",
   "src/open.mjs",
   "src/update.mjs",
