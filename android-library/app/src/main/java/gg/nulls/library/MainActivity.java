@@ -38,7 +38,9 @@ import java.util.concurrent.*;
 public final class MainActivity extends Activity {
     private int BG,INK,MUTED,ACCENT,LINE,WHITE,GLASS,GLASS_STRONG,HIGHLIGHT,ERROR;
     private final EntryMotion entryMotion=new EntryMotion();
-    private final ExecutorService worker=Executors.newSingleThreadExecutor();
+    // Keep unrelated profile/map/account requests from waiting behind a long catalog refresh.
+    // Repository.refresh and Repository.index already apply their own bounded concurrency.
+    private final ExecutorService worker=Executors.newFixedThreadPool(4);
     private final Handler ui=new Handler(Looper.getMainLooper());
     private AccountSync accountSync;private TextView syncStatusView;private Dialog preferenceDialog;private String preferenceKind="";
     private Api api; private Repository repo; private Localizer localizer; private Blocklist blocklist;
